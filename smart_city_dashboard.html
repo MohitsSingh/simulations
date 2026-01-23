@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🏙️ Smart City Transport Dashboard | IoT, AI & Connected Mobility</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #ecf0f1;
+        }
+        
+        .container { max-width: 1600px; margin: 0 auto; }
+        
+        h1 {
+            text-align: center;
+            color: #00d4ff;
+            margin-bottom: 8px;
+            font-size: 1.9em;
+            text-shadow: 0 0 20px rgba(0,212,255,0.5);
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: rgba(255,255,255,0.8);
+            margin-bottom: 20px;
+            font-size: 0.95em;
+        }
+        
+        .pillars-banner {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(0,212,255,0.3);
+            border-radius: 12px;
+            padding: 15px 20px;
+            margin-bottom: 20px;
+        }
+        
+        .pillars-banner h3 { color: #00d4ff; margin-bottom: 12px; font-size: 1em; }
+        
+        .pillars-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 10px;
+        }
+        
+        @media (max-width: 900px) { .pillars-grid { grid-template-columns: repeat(3, 1fr); } }
+        
+        .pillar {
+            background: rgba(0,212,255,0.1);
+            border: 1px solid rgba(0,212,255,0.3);
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+        
+        .pillar:hover { background: rgba(0,212,255,0.2); transform: translateY(-3px); }
+        .pillar .icon { font-size: 1.8em; }
+        .pillar .name { font-size: 0.75em; margin-top: 5px; opacity: 0.9; }
+        
+        .main-grid {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 20px;
+        }
+        
+        @media (max-width: 1100px) { .main-grid { grid-template-columns: 1fr; } }
+        
+        .card {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 18px;
+            backdrop-filter: blur(10px);
+            margin-bottom: 15px;
+        }
+        
+        .card h2 {
+            color: #00d4ff;
+            font-size: 1em;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(0,212,255,0.3);
+        }
+        
+        .tech-toggles { display: flex; flex-direction: column; gap: 12px; }
+        
+        .tech-toggle {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .tech-toggle .icon { font-size: 1.5em; }
+        .tech-toggle .info { flex: 1; }
+        .tech-toggle .name { font-weight: bold; font-size: 0.9em; }
+        .tech-toggle .desc { font-size: 0.75em; opacity: 0.7; margin-top: 2px; }
+        
+        .toggle-switch { position: relative; width: 50px; height: 26px; }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(255,255,255,0.2);
+            border-radius: 26px;
+            transition: 0.3s;
+        }
+        
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 3px;
+            bottom: 3px;
+            background: white;
+            border-radius: 50%;
+            transition: 0.3s;
+        }
+        
+        input:checked + .toggle-slider { background: #00d4ff; }
+        input:checked + .toggle-slider:before { transform: translateX(24px); }
+        
+        .slider-group { margin-bottom: 18px; }
+        
+        .slider-group label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85em;
+            color: rgba(255,255,255,0.8);
+            margin-bottom: 8px;
+        }
+        
+        .slider-group .value { color: #00d4ff; font-weight: bold; }
+        
+        .slider-group input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            -webkit-appearance: none;
+            background: rgba(255,255,255,0.2);
+        }
+        
+        .slider-group input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #00d4ff;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(0,212,255,0.5);
+        }
+        
+        .results-area { display: flex; flex-direction: column; gap: 15px; }
+        
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+        }
+        
+        @media (max-width: 900px) { .kpi-grid { grid-template-columns: repeat(2, 1fr); } }
+        
+        .kpi-card {
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(0,212,255,0.3);
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+        }
+        
+        .kpi-card .icon { font-size: 1.8em; }
+        .kpi-card .label { font-size: 0.75em; opacity: 0.7; margin: 8px 0 5px; }
+        .kpi-card .value { font-size: 1.6em; font-weight: bold; color: #00d4ff; }
+        .kpi-card .change { font-size: 0.75em; margin-top: 5px; }
+        .kpi-card .change.positive { color: #2ecc71; }
+        .kpi-card .change.negative { color: #e74c3c; }
+        
+        .live-feed {
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(0,212,255,0.3);
+            border-radius: 12px;
+            padding: 20px;
+        }
+        
+        .live-feed h3 {
+            color: #00d4ff;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .live-dot {
+            width: 10px;
+            height: 10px;
+            background: #e74c3c;
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.2); }
+        }
+        
+        .live-dot.active { background: #2ecc71; }
+        
+        .feed-items { max-height: 200px; overflow-y: auto; }
+        
+        .feed-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            font-size: 0.85em;
+        }
+        
+        .feed-item .time { color: #00d4ff; font-size: 0.8em; width: 50px; }
+        .feed-item .icon { font-size: 1.2em; }
+        .feed-item .message { flex: 1; opacity: 0.9; }
+        
+        .charts-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        @media (max-width: 900px) { .charts-row { grid-template-columns: 1fr; } }
+        
+        .chart-card {
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(0,212,255,0.3);
+            border-radius: 12px;
+            padding: 20px;
+        }
+        
+        .chart-card h3 { color: #00d4ff; font-size: 0.95em; margin-bottom: 15px; text-align: center; }
+        .chart-wrapper { height: 250px; }
+        
+        .tech-benefits {
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(0,212,255,0.3);
+            border-radius: 12px;
+            padding: 20px;
+        }
+        
+        .tech-benefits h3 { color: #00d4ff; margin-bottom: 15px; }
+        
+        .benefits-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+        
+        @media (max-width: 800px) { .benefits-grid { grid-template-columns: 1fr; } }
+        
+        .benefit-card {
+            background: rgba(0,212,255,0.1);
+            border: 1px solid rgba(0,212,255,0.2);
+            border-radius: 10px;
+            padding: 15px;
+        }
+        
+        .benefit-card h4 {
+            color: #00d4ff;
+            font-size: 0.9em;
+            margin-bottom: 10px;
+        }
+        
+        .benefit-card ul { font-size: 0.8em; margin-left: 18px; opacity: 0.85; }
+        .benefit-card li { margin-bottom: 5px; }
+        
+        .uk-initiatives {
+            background: linear-gradient(135deg, rgba(0,212,255,0.1), rgba(0,100,150,0.1));
+            border: 1px solid rgba(0,212,255,0.3);
+            border-radius: 12px;
+            padding: 20px;
+        }
+        
+        .uk-initiatives h3 { color: #00d4ff; margin-bottom: 15px; }
+        
+        .initiative-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+        
+        .initiative {
+            background: rgba(0,0,0,0.2);
+            border-radius: 8px;
+            padding: 12px;
+        }
+        
+        .initiative h4 { color: #f39c12; font-size: 0.85em; margin-bottom: 5px; }
+        .initiative p { font-size: 0.75em; opacity: 0.8; line-height: 1.4; }
+        
+        .challenges-box {
+            background: rgba(231,76,60,0.1);
+            border: 1px solid rgba(231,76,60,0.3);
+            border-radius: 12px;
+            padding: 20px;
+        }
+        
+        .challenges-box h3 { color: #e74c3c; margin-bottom: 15px; }
+        
+        .challenge-list {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+        
+        .challenge-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            font-size: 0.85em;
+        }
+        
+        .challenge-item .icon { font-size: 1.2em; }
+        
+        footer {
+            text-align: center;
+            padding: 20px;
+            margin-top: 30px;
+            color: rgba(255,255,255,0.6);
+            font-size: 0.85em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="index.html" style="display: inline-flex; align-items: center; gap: 8px; color: rgba(255,255,255,0.9); text-decoration: none; background: rgba(255,255,255,0.1); padding: 10px 20px; border-radius: 25px; font-size: 0.9em; margin-bottom: 15px; border: 1px solid rgba(255,255,255,0.2); transition: background 0.2s;">
+            <span>←</span> <span>Return to Home Page</span>
+        </a>
+        <h1>🏙️ Smart City Transport Dashboard</h1>
+        <p class="subtitle">Explore IoT, AI, 5G, and Autonomous Vehicle technologies transforming urban mobility</p>
+        
+        <div class="pillars-banner">
+            <h3>🏛️ Six Pillars of a Smart City</h3>
+            <div class="pillars-grid">
+                <div class="pillar"><div class="icon">🚗</div><div class="name">Smart Mobility</div></div>
+                <div class="pillar"><div class="icon">🏛️</div><div class="name">Smart Governance</div></div>
+                <div class="pillar"><div class="icon">🌍</div><div class="name">Smart Environment</div></div>
+                <div class="pillar"><div class="icon">💼</div><div class="name">Smart Economy</div></div>
+                <div class="pillar"><div class="icon">👥</div><div class="name">Smart People</div></div>
+                <div class="pillar"><div class="icon">🏠</div><div class="name">Smart Living</div></div>
+            </div>
+        </div>
+        
+        <div class="main-grid">
+            <div class="controls">
+                <div class="card">
+                    <h2>🔌 Enable Smart Technologies</h2>
+                    <div class="tech-toggles">
+                        <div class="tech-toggle">
+                            <div class="icon">📡</div>
+                            <div class="info">
+                                <div class="name">IoT Sensors</div>
+                                <div class="desc">Traffic flow, parking, environment</div>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="iotEnabled" checked onchange="updateAll()">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <div class="tech-toggle">
+                            <div class="icon">🤖</div>
+                            <div class="info">
+                                <div class="name">AI Traffic Management</div>
+                                <div class="desc">Adaptive signals, predictive analytics</div>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="aiEnabled" checked onchange="updateAll()">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <div class="tech-toggle">
+                            <div class="icon">📶</div>
+                            <div class="info">
+                                <div class="name">5G Connectivity</div>
+                                <div class="desc">V2X communication, low latency</div>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="fiveGEnabled" onchange="updateAll()">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <div class="tech-toggle">
+                            <div class="icon">🚗</div>
+                            <div class="info">
+                                <div class="name">Autonomous Vehicles</div>
+                                <div class="desc">Self-driving cars, shuttles</div>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="avEnabled" onchange="updateAll()">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <div class="tech-toggle">
+                            <div class="icon">📱</div>
+                            <div class="info">
+                                <div class="name">MaaS Platform</div>
+                                <div class="desc">Mobility-as-a-Service integration</div>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="maasEnabled" onchange="updateAll()">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h2>⚙️ City Parameters</h2>
+                    <div class="slider-group">
+                        <label><span>Population (millions)</span><span class="value" id="popValue">2.0</span></label>
+                        <input type="range" id="population" min="0.5" max="10" value="2" step="0.5" oninput="updateAll()">
+                    </div>
+                    <div class="slider-group">
+                        <label><span>Daily Trips (millions)</span><span class="value" id="tripsValue">3.0</span></label>
+                        <input type="range" id="dailyTrips" min="0.5" max="15" value="3" step="0.5" oninput="updateAll()">
+                    </div>
+                    <div class="slider-group">
+                        <label><span>Baseline Congestion Index</span><span class="value" id="congestionValue">65</span></label>
+                        <input type="range" id="baseCongestion" min="20" max="100" value="65" step="5" oninput="updateAll()">
+                    </div>
+                    <div class="slider-group">
+                        <label><span>Public Transport Coverage (%)</span><span class="value" id="ptCoverageValue">70%</span></label>
+                        <input type="range" id="ptCoverage" min="20" max="100" value="70" step="5" oninput="updateAll()">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="results-area">
+                <div class="kpi-grid">
+                    <div class="kpi-card">
+                        <div class="icon">🚦</div>
+                        <div class="label">Congestion Index</div>
+                        <div class="value" id="congestionKPI">65</div>
+                        <div class="change" id="congestionChange">Baseline</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="icon">⏱️</div>
+                        <div class="label">Avg Journey Time</div>
+                        <div class="value" id="journeyTime">32 min</div>
+                        <div class="change" id="timeChange">Baseline</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="icon">💨</div>
+                        <div class="label">CO₂ Reduction</div>
+                        <div class="value" id="co2Reduction">0%</div>
+                        <div class="change" id="co2Change">No smart tech</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="icon">🚗</div>
+                        <div class="label">Road Safety Score</div>
+                        <div class="value" id="safetyScore">72</div>
+                        <div class="change" id="safetyChange">Baseline</div>
+                    </div>
+                </div>
+                
+                <div class="live-feed">
+                    <h3><span class="live-dot" id="liveDot"></span> Live Smart City Feed</h3>
+                    <div class="feed-items" id="feedItems"></div>
+                </div>
+                
+                <div class="charts-row">
+                    <div class="chart-card">
+                        <h3>📊 Technology Impact on KPIs</h3>
+                        <div class="chart-wrapper"><canvas id="impactRadar"></canvas></div>
+                    </div>
+                    <div class="chart-card">
+                        <h3>📈 Traffic Flow (24hr Simulation)</h3>
+                        <div class="chart-wrapper"><canvas id="trafficChart"></canvas></div>
+                    </div>
+                </div>
+                
+                <div class="tech-benefits">
+                    <h3>🎯 Technology Benefits</h3>
+                    <div class="benefits-grid">
+                        <div class="benefit-card">
+                            <h4>📡 IoT Sensors</h4>
+                            <ul>
+                                <li>Real-time traffic monitoring</li>
+                                <li>Smart parking (−30% search time)</li>
+                                <li>Environmental data collection</li>
+                                <li>Infrastructure health monitoring</li>
+                            </ul>
+                        </div>
+                        <div class="benefit-card">
+                            <h4>🤖 AI & Machine Learning</h4>
+                            <ul>
+                                <li>Adaptive traffic signal control</li>
+                                <li>Predictive maintenance</li>
+                                <li>Demand forecasting</li>
+                                <li>Incident detection from CCTV</li>
+                            </ul>
+                        </div>
+                        <div class="benefit-card">
+                            <h4>📶 5G & V2X</h4>
+                            <ul>
+                                <li>Vehicle-to-Everything comms</li>
+                                <li>Ultra-low latency (1ms)</li>
+                                <li>Truck platooning capability</li>
+                                <li>Emergency vehicle priority</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="uk-initiatives">
+                    <h3>🇬🇧 UK Smart Transport Initiatives</h3>
+                    <div class="initiative-grid">
+                        <div class="initiative">
+                            <h4>🚗 Automated Vehicles Act 2024</h4>
+                            <p>UK framework for AV safety and insurance. Self-driving vehicles expected on roads by 2026. £42bn industry by 2035.</p>
+                        </div>
+                        <div class="initiative">
+                            <h4>📶 5G Testbeds Programme</h4>
+                            <p>Government-funded 5G corridors for connected transport trials on roads and railways.</p>
+                        </div>
+                        <div class="initiative">
+                            <h4>🤖 Vivacity Labs AI</h4>
+                            <p>AI traffic sensors in Manchester reducing congestion and prioritising buses/cyclists.</p>
+                        </div>
+                        <div class="initiative">
+                            <h4>🚌 CAV Trials</h4>
+                            <p>Autonomous shuttles in Cambridge, Greenwich. Self-driving bus in Fife on mixed traffic routes.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="challenges-box">
+                    <h3>⚠️ Challenges & Risks</h3>
+                    <div class="challenge-list">
+                        <div class="challenge-item"><div class="icon">🔒</div><div>Data Privacy: Location tracking requires strict governance</div></div>
+                        <div class="challenge-item"><div class="icon">🛡️</div><div>Cybersecurity: Connected vehicles vulnerable to hacking</div></div>
+                        <div class="challenge-item"><div class="icon">⚡</div><div>Reliability: System failures need redundancy plans</div></div>
+                        <div class="challenge-item"><div class="icon">🔗</div><div>Interoperability: Systems must work across cities</div></div>
+                        <div class="challenge-item"><div class="icon">👥</div><div>Social Equity: Benefits must reach all citizens</div></div>
+                        <div class="challenge-item"><div class="icon">💼</div><div>Job Displacement: Impact on professional drivers</div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p style="background: rgba(255,193,7,0.2); border: 1px solid rgba(255,193,7,0.4); border-radius: 8px; padding: 12px 15px; margin-bottom: 15px; font-size: 0.8em; color: rgba(255,255,255,0.9);">
+                ⚠️ <strong>Note:</strong> This simulation is for educational demonstration purposes only. Results may differ significantly from real-world outcomes. It illustrates theoretical concepts based on the parameters you configure.
+            </p>
+            <p>© 2025 Dr Mohit Kumar Singh. All rights reserved.</p>
+            <p style="margin-top: 5px; opacity: 0.7;">TRAN1060: Passenger and Freight Transport | For educational purposes only.</p>
+        </footer>
+    </div>
+
+    <script>
+        let impactRadar, trafficChart;
+        let feedInterval;
+        
+        const feedMessages = {
+            iot: [
+                { icon: '🅿️', msg: 'Smart parking detected 45 available spaces in Zone A' },
+                { icon: '📊', msg: 'Traffic sensor: 2,340 vehicles/hr on A1 corridor' },
+                { icon: '🌡️', msg: 'Air quality sensor: PM2.5 levels normal (12 µg/m³)' },
+                { icon: '🚧', msg: 'Road surface sensor detected pothole on B234' }
+            ],
+            ai: [
+                { icon: '🚦', msg: 'AI adjusted signal timing on High Street (−18% delay)' },
+                { icon: '🔮', msg: 'Predictive model: Rush hour peak expected at 17:45' },
+                { icon: '🚌', msg: 'Bus priority activated for Route 42' },
+                { icon: '📹', msg: 'CCTV AI detected incident on M1 Junction 5' }
+            ],
+            fiveG: [
+                { icon: '📶', msg: 'V2X alert: Emergency vehicle approaching intersection' },
+                { icon: '🚛', msg: 'Truck platoon formed: 3 HGVs on M6 corridor' },
+                { icon: '⚡', msg: '5G latency: 0.8ms achieved on test corridor' },
+                { icon: '🗺️', msg: 'HD map update pushed to 12,000 connected vehicles' }
+            ],
+            av: [
+                { icon: '🚗', msg: 'Autonomous shuttle completed route with 23 passengers' },
+                { icon: '🤖', msg: 'AV detected pedestrian, applied predictive braking' },
+                { icon: '📦', msg: 'Delivery pod completed 8 contactless deliveries' },
+                { icon: '🚌', msg: 'Self-driving bus operating on Route 15' }
+            ],
+            maas: [
+                { icon: '📱', msg: 'MaaS app: 1,200 multimodal journeys booked today' },
+                { icon: '🚲', msg: 'E-bike share: 89% fleet utilisation this hour' },
+                { icon: '🎫', msg: 'Contactless payments processed: £45,000 today' },
+                { icon: '🔄', msg: 'Real-time journey replanning for 340 users' }
+            ]
+        };
+        
+        function getEnabledTech() {
+            return {
+                iot: document.getElementById('iotEnabled').checked,
+                ai: document.getElementById('aiEnabled').checked,
+                fiveG: document.getElementById('fiveGEnabled').checked,
+                av: document.getElementById('avEnabled').checked,
+                maas: document.getElementById('maasEnabled').checked
+            };
+        }
+        
+        function getParams() {
+            return {
+                population: parseFloat(document.getElementById('population').value),
+                trips: parseFloat(document.getElementById('dailyTrips').value),
+                baseCongestion: parseFloat(document.getElementById('baseCongestion').value),
+                ptCoverage: parseFloat(document.getElementById('ptCoverage').value)
+            };
+        }
+        
+        function calculateKPIs() {
+            const tech = getEnabledTech();
+            const params = getParams();
+            
+            let congestionReduction = 0;
+            let co2Reduction = 0;
+            let safetyImprovement = 0;
+            let journeyTimeReduction = 0;
+            
+            if (tech.iot) { congestionReduction += 8; co2Reduction += 5; journeyTimeReduction += 5; }
+            if (tech.ai) { congestionReduction += 15; co2Reduction += 8; safetyImprovement += 10; journeyTimeReduction += 12; }
+            if (tech.fiveG) { congestionReduction += 5; safetyImprovement += 8; journeyTimeReduction += 3; }
+            if (tech.av) { congestionReduction += 10; co2Reduction += 12; safetyImprovement += 25; journeyTimeReduction += 8; }
+            if (tech.maas) { congestionReduction += 7; co2Reduction += 10; journeyTimeReduction += 6; }
+            
+            const newCongestion = Math.max(10, params.baseCongestion * (1 - congestionReduction / 100));
+            const baseJourneyTime = 20 + params.baseCongestion * 0.3;
+            const newJourneyTime = baseJourneyTime * (1 - journeyTimeReduction / 100);
+            const baseSafety = 72;
+            const newSafety = Math.min(98, baseSafety + safetyImprovement);
+            
+            return {
+                congestion: Math.round(newCongestion),
+                congestionChange: Math.round(params.baseCongestion - newCongestion),
+                journeyTime: Math.round(newJourneyTime),
+                journeyTimeChange: Math.round(baseJourneyTime - newJourneyTime),
+                co2Reduction: Math.round(co2Reduction),
+                safety: Math.round(newSafety),
+                safetyChange: Math.round(newSafety - baseSafety)
+            };
+        }
+        
+        function updateDisplays() {
+            const params = getParams();
+            document.getElementById('popValue').textContent = params.population.toFixed(1);
+            document.getElementById('tripsValue').textContent = params.trips.toFixed(1);
+            document.getElementById('congestionValue').textContent = params.baseCongestion;
+            document.getElementById('ptCoverageValue').textContent = params.ptCoverage + '%';
+        }
+        
+        function updateKPIs(kpis) {
+            document.getElementById('congestionKPI').textContent = kpis.congestion;
+            document.getElementById('congestionChange').textContent = kpis.congestionChange > 0 ? `↓ ${kpis.congestionChange} points` : 'Baseline';
+            document.getElementById('congestionChange').className = 'change ' + (kpis.congestionChange > 0 ? 'positive' : '');
+            
+            document.getElementById('journeyTime').textContent = kpis.journeyTime + ' min';
+            document.getElementById('timeChange').textContent = kpis.journeyTimeChange > 0 ? `↓ ${kpis.journeyTimeChange} min saved` : 'Baseline';
+            document.getElementById('timeChange').className = 'change ' + (kpis.journeyTimeChange > 0 ? 'positive' : '');
+            
+            document.getElementById('co2Reduction').textContent = kpis.co2Reduction + '%';
+            document.getElementById('co2Change').textContent = kpis.co2Reduction > 0 ? '↓ Emissions reduced' : 'No smart tech';
+            document.getElementById('co2Change').className = 'change ' + (kpis.co2Reduction > 0 ? 'positive' : '');
+            
+            document.getElementById('safetyScore').textContent = kpis.safety;
+            document.getElementById('safetyChange').textContent = kpis.safetyChange > 0 ? `↑ +${kpis.safetyChange} points` : 'Baseline';
+            document.getElementById('safetyChange').className = 'change ' + (kpis.safetyChange > 0 ? 'positive' : '');
+        }
+        
+        function updateCharts(kpis) {
+            const tech = getEnabledTech();
+            const params = getParams();
+            
+            // Radar chart
+            const baseValues = [50, 50, 50, 50, 50];
+            const smartValues = [
+                50 + (tech.iot ? 15 : 0) + (tech.ai ? 20 : 0),
+                50 + (tech.ai ? 25 : 0) + (tech.maas ? 10 : 0),
+                50 + (tech.iot ? 10 : 0) + (tech.av ? 20 : 0) + (tech.maas ? 15 : 0),
+                50 + (tech.av ? 30 : 0) + (tech.ai ? 15 : 0) + (tech.fiveG ? 10 : 0),
+                50 + (tech.fiveG ? 20 : 0) + (tech.iot ? 15 : 0)
+            ];
+            
+            impactRadar.data.datasets[0].data = baseValues;
+            impactRadar.data.datasets[1].data = smartValues;
+            impactRadar.update();
+            
+            // Traffic chart
+            const hours = Array.from({length: 24}, (_, i) => i + ':00');
+            const baseTraffic = hours.map((_, i) => {
+                const base = 30;
+                const morning = i >= 7 && i <= 9 ? 40 : 0;
+                const evening = i >= 16 && i <= 18 ? 50 : 0;
+                return base + morning + evening + Math.random() * 10;
+            });
+            
+            const smartReduction = (tech.iot ? 0.05 : 0) + (tech.ai ? 0.15 : 0) + (tech.fiveG ? 0.05 : 0) + (tech.av ? 0.1 : 0) + (tech.maas ? 0.07 : 0);
+            const smartTraffic = baseTraffic.map(v => v * (1 - smartReduction));
+            
+            trafficChart.data.datasets[0].data = baseTraffic;
+            trafficChart.data.datasets[1].data = smartTraffic;
+            trafficChart.update();
+        }
+        
+        function updateLiveFeed() {
+            const tech = getEnabledTech();
+            const anyEnabled = Object.values(tech).some(v => v);
+            
+            document.getElementById('liveDot').className = 'live-dot' + (anyEnabled ? ' active' : '');
+            
+            if (!anyEnabled) {
+                document.getElementById('feedItems').innerHTML = '<div class="feed-item"><div class="icon">⚠️</div><div class="message">Enable smart technologies to see live feed</div></div>';
+                return;
+            }
+            
+            const enabledTechs = Object.keys(tech).filter(k => tech[k]);
+            const feed = [];
+            
+            for (let i = 0; i < 6; i++) {
+                const techKey = enabledTechs[Math.floor(Math.random() * enabledTechs.length)];
+                const messages = feedMessages[techKey];
+                const msg = messages[Math.floor(Math.random() * messages.length)];
+                const time = new Date(Date.now() - i * 45000);
+                feed.push({
+                    time: time.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
+                    ...msg
+                });
+            }
+            
+            document.getElementById('feedItems').innerHTML = feed.map(f => `
+                <div class="feed-item">
+                    <div class="time">${f.time}</div>
+                    <div class="icon">${f.icon}</div>
+                    <div class="message">${f.msg}</div>
+                </div>
+            `).join('');
+        }
+        
+        function updateAll() {
+            updateDisplays();
+            const kpis = calculateKPIs();
+            updateKPIs(kpis);
+            updateCharts(kpis);
+            updateLiveFeed();
+        }
+        
+        function initCharts() {
+            impactRadar = new Chart(document.getElementById('impactRadar'), {
+                type: 'radar',
+                data: {
+                    labels: ['Traffic Flow', 'Efficiency', 'Sustainability', 'Safety', 'Connectivity'],
+                    datasets: [
+                        { label: 'Baseline', data: [50,50,50,50,50], borderColor: 'rgba(255,255,255,0.3)', backgroundColor: 'rgba(255,255,255,0.1)' },
+                        { label: 'With Smart Tech', data: [50,50,50,50,50], borderColor: '#00d4ff', backgroundColor: 'rgba(0,212,255,0.2)' }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { r: { beginAtZero: true, max: 100, grid: { color: 'rgba(255,255,255,0.1)' }, angleLines: { color: 'rgba(255,255,255,0.1)' }, pointLabels: { color: 'rgba(255,255,255,0.7)' }, ticks: { display: false } } },
+                    plugins: { legend: { position: 'bottom', labels: { color: 'rgba(255,255,255,0.7)', font: { size: 10 } } } }
+                }
+            });
+            
+            trafficChart = new Chart(document.getElementById('trafficChart'), {
+                type: 'line',
+                data: {
+                    labels: Array.from({length: 24}, (_, i) => i + ':00'),
+                    datasets: [
+                        { label: 'Without Smart Tech', data: [], borderColor: 'rgba(231,76,60,0.7)', fill: false, tension: 0.3 },
+                        { label: 'With Smart Tech', data: [], borderColor: '#00d4ff', fill: false, tension: 0.3 }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { 
+                        x: { grid: { color: 'rgba(255,255,255,0.1)' }, ticks: { color: 'rgba(255,255,255,0.5)', maxRotation: 0, autoSkip: true, maxTicksLimit: 8 } },
+                        y: { grid: { color: 'rgba(255,255,255,0.1)' }, ticks: { color: 'rgba(255,255,255,0.5)' }, title: { display: true, text: 'Congestion Index', color: 'rgba(255,255,255,0.5)' } }
+                    },
+                    plugins: { legend: { position: 'bottom', labels: { color: 'rgba(255,255,255,0.7)', font: { size: 10 } } } }
+                }
+            });
+        }
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            initCharts();
+            updateAll();
+            feedInterval = setInterval(updateLiveFeed, 10000);
+        });
+    </script>
+</body>
+</html>

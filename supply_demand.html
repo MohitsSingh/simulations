@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚌 Bus Price: Supply & Demand Interactive Model</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1500px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            color: white;
+            margin-bottom: 10px;
+            font-size: 2.2em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: rgba(255,255,255,0.9);
+            margin-bottom: 25px;
+            font-size: 1.1em;
+        }
+        
+        .main-grid {
+            display: grid;
+            grid-template-columns: 380px 1fr;
+            gap: 20px;
+        }
+        
+        @media (max-width: 1100px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        .card h2 {
+            color: #1F4E79;
+            font-size: 1.1em;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #eee;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .card h2 .arrow {
+            margin-left: auto;
+            font-size: 1.2em;
+        }
+        
+        .card.supply-card h2 {
+            border-bottom-color: #0066CC;
+        }
+        
+        .card.demand-card h2 {
+            border-bottom-color: #FF0000;
+        }
+        
+        .input-group {
+            margin-bottom: 15px;
+        }
+        
+        .input-group label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85em;
+            color: #555;
+            margin-bottom: 5px;
+        }
+        
+        .input-group label .effect {
+            font-size: 0.8em;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-weight: bold;
+        }
+        
+        .effect-supply-up {
+            background: #cce5ff;
+            color: #004085;
+        }
+        
+        .effect-supply-down {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .effect-demand-up {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .effect-demand-down {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .input-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .input-row input[type="range"] {
+            flex: 1;
+            height: 8px;
+            border-radius: 4px;
+            -webkit-appearance: none;
+        }
+        
+        .input-row input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        }
+        
+        .supply-slider::-webkit-slider-thumb {
+            background: #0066CC;
+        }
+        
+        .supply-slider {
+            background: linear-gradient(to right, #cce5ff, #0066CC);
+        }
+        
+        .demand-slider::-webkit-slider-thumb {
+            background: #FF0000;
+        }
+        
+        .demand-slider {
+            background: linear-gradient(to right, #ffcccc, #FF0000);
+        }
+        
+        .input-row .value {
+            min-width: 70px;
+            text-align: center;
+            font-weight: bold;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.9em;
+        }
+        
+        .value-supply {
+            color: #0066CC;
+            background: #E8F4FD;
+        }
+        
+        .value-demand {
+            color: #CC0000;
+            background: #FFF0F0;
+        }
+        
+        .chart-container {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        .chart-wrapper {
+            position: relative;
+            height: 450px;
+        }
+        
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        @media (max-width: 800px) {
+            .results-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .result-box {
+            text-align: center;
+            padding: 15px;
+            border-radius: 12px;
+            position: relative;
+        }
+        
+        .result-box.base {
+            background: linear-gradient(135deg, #f0f0f0, #e0e0e0);
+            border: 2px dashed #999;
+        }
+        
+        .result-box.shifted {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+        
+        .result-box.change {
+            background: linear-gradient(135deg, #ffecd2, #fcb69f);
+        }
+        
+        .result-box h3 {
+            font-size: 0.85em;
+            margin-bottom: 8px;
+            opacity: 0.8;
+        }
+        
+        .result-box .price {
+            font-size: 1.6em;
+            font-weight: bold;
+        }
+        
+        .result-box .quantity {
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+        
+        .change-indicator {
+            font-size: 1.4em;
+            font-weight: bold;
+        }
+        
+        .change-indicator.up {
+            color: #c0392b;
+        }
+        
+        .change-indicator.down {
+            color: #27ae60;
+        }
+        
+        .change-indicator.neutral {
+            color: #7f8c8d;
+        }
+        
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-top: 20px;
+            justify-content: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85em;
+        }
+        
+        .legend-line {
+            width: 30px;
+            height: 4px;
+        }
+        
+        .legend-line.dashed {
+            background: repeating-linear-gradient(90deg, currentColor 0, currentColor 5px, transparent 5px, transparent 10px);
+            height: 4px;
+        }
+        
+        .explanation {
+            margin-top: 15px;
+            padding: 15px;
+            background: #fff3cd;
+            border-radius: 10px;
+            border-left: 4px solid #ffc107;
+        }
+        
+        .explanation h4 {
+            color: #856404;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .explanation p {
+            color: #856404;
+            font-size: 0.9em;
+            line-height: 1.5;
+        }
+        
+        .concepts-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 10px;
+        }
+        
+        .concept {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            margin-bottom: 10px;
+            font-size: 0.85em;
+        }
+        
+        .concept:last-child {
+            margin-bottom: 0;
+        }
+        
+        .concept-icon {
+            font-size: 1.2em;
+        }
+        
+        .concept strong {
+            color: #1F4E79;
+        }
+        
+        .reset-btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .reset-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        
+        .shift-summary {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 2px solid #eee;
+        }
+        
+        .shift-item {
+            text-align: center;
+        }
+        
+        .shift-item .label {
+            font-size: 0.75em;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        
+        .shift-item .value {
+            font-size: 1.1em;
+            font-weight: bold;
+            padding: 5px 12px;
+            border-radius: 20px;
+        }
+        
+        .shift-item .value.supply {
+            background: #e3f2fd;
+            color: #0066CC;
+        }
+        
+        .shift-item .value.demand {
+            background: #ffebee;
+            color: #CC0000;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="index.html" style="display: inline-flex; align-items: center; gap: 8px; color: white; text-decoration: none; background: rgba(255,255,255,0.15); padding: 10px 20px; border-radius: 25px; font-size: 0.9em; margin-bottom: 15px; transition: background 0.2s;">
+            <span>←</span> <span>Return to Home Page</span>
+        </a>
+        <h1>🚌 Bus Price: Supply & Demand</h1>
+        <p class="subtitle">See how costs affect supply, and how demand factors affect demand — watch the equilibrium price change!</p>
+        
+        <div class="main-grid">
+            <div class="controls">
+                
+                <!-- Supply Factors (Costs) -->
+                <div class="card supply-card">
+                    <h2>
+                        <span>💰</span> Cost Factors (Affect Supply)
+                        <span class="arrow" style="color: #0066CC;">→ 📈</span>
+                    </h2>
+                    
+                    <div class="input-group">
+                        <label>
+                            Fuel Cost
+                            <span class="effect effect-supply-down">↑ Cost = ↓ Supply</span>
+                        </label>
+                        <div class="input-row">
+                            <span>£1</span>
+                            <input type="range" class="supply-slider" id="fuelCost" min="1" max="3" value="1.5" step="0.1">
+                            <span>£3</span>
+                            <span class="value value-supply" id="fuelCostValue">£1.50/L</span>
+                        </div>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label>
+                            Driver Wages
+                            <span class="effect effect-supply-down">↑ Wages = ↓ Supply</span>
+                        </label>
+                        <div class="input-row">
+                            <span>£12</span>
+                            <input type="range" class="supply-slider" id="wages" min="12" max="25" value="15" step="1">
+                            <span>£25</span>
+                            <span class="value value-supply" id="wagesValue">£15/hr</span>
+                        </div>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label>
+                            Fleet Size (Number of Buses)
+                            <span class="effect effect-supply-up">↑ Buses = ↑ Supply</span>
+                        </label>
+                        <div class="input-row">
+                            <span>20</span>
+                            <input type="range" class="supply-slider" id="fleetSize" min="20" max="100" value="50" step="5">
+                            <span>100</span>
+                            <span class="value value-supply" id="fleetSizeValue">50 buses</span>
+                        </div>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label>
+                            Maintenance Cost
+                            <span class="effect effect-supply-down">↑ Maint. = ↓ Supply</span>
+                        </label>
+                        <div class="input-row">
+                            <span>Low</span>
+                            <input type="range" class="supply-slider" id="maintenance" min="1" max="5" value="2" step="1">
+                            <span>High</span>
+                            <span class="value value-supply" id="maintenanceValue">Low</span>
+                        </div>
+                    </div>
+                    
+                    <div class="shift-summary">
+                        <div class="shift-item">
+                            <div class="label">Supply Shift</div>
+                            <div class="value supply" id="supplyShiftDisplay">0</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Demand Factors -->
+                <div class="card demand-card">
+                    <h2>
+                        <span>👥</span> Demand Factors
+                        <span class="arrow" style="color: #FF0000;">→ 📈</span>
+                    </h2>
+                    
+                    <div class="input-group">
+                        <label>
+                            Population in Area
+                            <span class="effect effect-demand-up">↑ Pop = ↑ Demand</span>
+                        </label>
+                        <div class="input-row">
+                            <span>50k</span>
+                            <input type="range" class="demand-slider" id="population" min="50" max="200" value="100" step="10">
+                            <span>200k</span>
+                            <span class="value value-demand" id="populationValue">100k</span>
+                        </div>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label>
+                            Average Income Level
+                            <span class="effect effect-demand-down">↑ Income = ↓ Bus Demand</span>
+                        </label>
+                        <div class="input-row">
+                            <span>£20k</span>
+                            <input type="range" class="demand-slider" id="income" min="20" max="60" value="35" step="5">
+                            <span>£60k</span>
+                            <span class="value value-demand" id="incomeValue">£35k</span>
+                        </div>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label>
+                            Taxi/Uber Price (Substitute)
+                            <span class="effect effect-demand-up">↑ Taxi = ↑ Bus Demand</span>
+                        </label>
+                        <div class="input-row">
+                            <span>£5</span>
+                            <input type="range" class="demand-slider" id="taxiPrice" min="5" max="20" value="10" step="1">
+                            <span>£20</span>
+                            <span class="value value-demand" id="taxiPriceValue">£10</span>
+                        </div>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label>
+                            Petrol Price (for car owners)
+                            <span class="effect effect-demand-up">↑ Petrol = ↑ Bus Demand</span>
+                        </label>
+                        <div class="input-row">
+                            <span>£1.20</span>
+                            <input type="range" class="demand-slider" id="petrolPrice" min="1.2" max="2.5" value="1.5" step="0.1">
+                            <span>£2.50</span>
+                            <span class="value value-demand" id="petrolPriceValue">£1.50/L</span>
+                        </div>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label>
+                            Weather Conditions
+                            <span class="effect effect-demand-down">Bad = ↓ Demand</span>
+                        </label>
+                        <div class="input-row">
+                            <span>🌧️</span>
+                            <input type="range" class="demand-slider" id="weather" min="1" max="3" value="2" step="1">
+                            <span>☀️</span>
+                            <span class="value value-demand" id="weatherValue">Normal</span>
+                        </div>
+                    </div>
+                    
+                    <div class="shift-summary">
+                        <div class="shift-item">
+                            <div class="label">Demand Shift</div>
+                            <div class="value demand" id="demandShiftDisplay">+2,000</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Reset Button -->
+                <button class="reset-btn" onclick="resetAll()">🔄 Reset to Default Values</button>
+                
+                <!-- Key Concepts -->
+                <div class="card">
+                    <h2><span>📚</span> Key Concepts</h2>
+                    <div class="concepts-card">
+                        <div class="concept">
+                            <span class="concept-icon">📉</span>
+                            <div><strong>Higher costs</strong> → Supply shifts LEFT → Price increases</div>
+                        </div>
+                        <div class="concept">
+                            <span class="concept-icon">📈</span>
+                            <div><strong>More buses</strong> → Supply shifts RIGHT → Price decreases</div>
+                        </div>
+                        <div class="concept">
+                            <span class="concept-icon">👥</span>
+                            <div><strong>More people</strong> → Demand shifts RIGHT → Price increases</div>
+                        </div>
+                        <div class="concept">
+                            <span class="concept-icon">🚕</span>
+                            <div><strong>Expensive substitutes</strong> → Demand shifts RIGHT → Price increases</div>
+                        </div>
+                        <div class="concept">
+                            <span class="concept-icon">💷</span>
+                            <div><strong>Higher income</strong> → Demand shifts LEFT (buses are inferior goods)</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Chart Area -->
+            <div class="chart-container">
+                <div class="chart-wrapper">
+                    <canvas id="chart"></canvas>
+                </div>
+                
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-line dashed" style="color: #FFB3B3;"></div>
+                        <span>Base Demand</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-line dashed" style="color: #B3D9FF;"></div>
+                        <span>Base Supply</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-line" style="background: #FF0000;"></div>
+                        <span>New Demand</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-line" style="background: #0066CC;"></div>
+                        <span>New Supply</span>
+                    </div>
+                </div>
+                
+                <div class="results-grid">
+                    <div class="result-box base">
+                        <h3>📊 Base Equilibrium</h3>
+                        <div class="price" id="basePrice">£6.67</div>
+                        <div class="quantity" id="baseQty">6,667 riders</div>
+                    </div>
+                    <div class="result-box shifted">
+                        <h3>📊 New Equilibrium</h3>
+                        <div class="price" id="shiftedPrice">£8.00</div>
+                        <div class="quantity" id="shiftedQty">8,000 riders</div>
+                    </div>
+                    <div class="result-box change">
+                        <h3>📊 Change</h3>
+                        <div class="change-indicator" id="priceChange">↑ £1.33</div>
+                        <div class="quantity" id="qtyChange">+1,333 riders</div>
+                    </div>
+                </div>
+                
+                <div class="explanation">
+                    <h4>💡 What's happening?</h4>
+                    <p id="explanationText">
+                        Adjust the sliders on the left to see how different factors affect supply and demand curves. 
+                        Watch how the equilibrium price and quantity change as the curves shift!
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Base parameters
+        const BASE_DEMAND_INTERCEPT = 12000;
+        const BASE_SUPPLY_INTERCEPT = 2000;
+        const DEMAND_SLOPE = -800;
+        const SUPPLY_SLOPE = 700;
+        
+        // Default values for reset
+        const DEFAULTS = {
+            fuelCost: 1.5,
+            wages: 15,
+            fleetSize: 50,
+            maintenance: 2,
+            population: 100,
+            income: 35,
+            taxiPrice: 10,
+            petrolPrice: 1.5,
+            weather: 2
+        };
+        
+        let chart;
+        
+        // Calculate supply shift based on cost factors
+        function calculateSupplyShift() {
+            const fuelCost = parseFloat(document.getElementById('fuelCost').value);
+            const wages = parseFloat(document.getElementById('wages').value);
+            const fleetSize = parseFloat(document.getElementById('fleetSize').value);
+            const maintenance = parseFloat(document.getElementById('maintenance').value);
+            
+            let shift = 0;
+            
+            // Fuel cost effect (higher cost = less supply)
+            shift -= (fuelCost - 1.5) * 1500;
+            
+            // Wages effect (higher wages = less supply)
+            shift -= (wages - 15) * 150;
+            
+            // Fleet size effect (more buses = more supply)
+            shift += (fleetSize - 50) * 40;
+            
+            // Maintenance cost effect (higher = less supply)
+            shift -= (maintenance - 2) * 500;
+            
+            return Math.round(shift);
+        }
+        
+        // Calculate demand shift based on demand factors
+        function calculateDemandShift() {
+            const population = parseFloat(document.getElementById('population').value);
+            const income = parseFloat(document.getElementById('income').value);
+            const taxiPrice = parseFloat(document.getElementById('taxiPrice').value);
+            const petrolPrice = parseFloat(document.getElementById('petrolPrice').value);
+            const weather = parseFloat(document.getElementById('weather').value);
+            
+            let shift = 0;
+            
+            // Population effect (more people = more demand)
+            shift += (population - 100) * 30;
+            
+            // Income effect (higher income = less bus demand - inferior good)
+            shift -= (income - 35) * 80;
+            
+            // Taxi price effect (more expensive taxis = more bus demand)
+            shift += (taxiPrice - 10) * 200;
+            
+            // Petrol price effect (more expensive petrol = more bus demand)
+            shift += (petrolPrice - 1.5) * 1500;
+            
+            // Weather effect
+            if (weather === 1) shift -= 1000; // Bad weather
+            else if (weather === 3) shift += 800; // Good weather
+            
+            return Math.round(shift);
+        }
+        
+        // Generate curve data points
+        function generateCurveData(intercept, slope, shift = 0) {
+            const points = [];
+            for (let price = 0.5; price <= 14; price += 0.5) {
+                const quantity = Math.max(0, intercept + shift + slope * price);
+                points.push({ x: quantity, y: price });
+            }
+            return points;
+        }
+        
+        // Calculate equilibrium
+        function calculateEquilibrium(demandIntercept, supplyIntercept) {
+            const price = (demandIntercept - supplyIntercept) / (SUPPLY_SLOPE - DEMAND_SLOPE);
+            const quantity = demandIntercept + DEMAND_SLOPE * price;
+            return { 
+                price: Math.max(0, price), 
+                quantity: Math.max(0, quantity) 
+            };
+        }
+        
+        // Generate explanation text
+        function generateExplanation(demandShift, supplyShift, priceChange, qtyChange) {
+            let explanations = [];
+            
+            if (supplyShift > 500) {
+                explanations.push("Lower costs or more buses have shifted supply RIGHT, putting downward pressure on prices.");
+            } else if (supplyShift < -500) {
+                explanations.push("Higher costs have shifted supply LEFT, pushing prices up.");
+            }
+            
+            if (demandShift > 500) {
+                explanations.push("Increased demand (more people, expensive alternatives) has shifted demand RIGHT, pushing prices up.");
+            } else if (demandShift < -500) {
+                explanations.push("Decreased demand has shifted demand LEFT, putting downward pressure on prices.");
+            }
+            
+            if (explanations.length === 0) {
+                explanations.push("Make bigger changes to the sliders to see significant shifts in the curves!");
+            }
+            
+            if (priceChange > 0.5) {
+                explanations.push(`The equilibrium price has INCREASED by £${priceChange.toFixed(2)}.`);
+            } else if (priceChange < -0.5) {
+                explanations.push(`The equilibrium price has DECREASED by £${Math.abs(priceChange).toFixed(2)}.`);
+            }
+            
+            return explanations.join(" ");
+        }
+        
+        // Update value displays
+        function updateValueDisplays() {
+            document.getElementById('fuelCostValue').textContent = `£${parseFloat(document.getElementById('fuelCost').value).toFixed(2)}/L`;
+            document.getElementById('wagesValue').textContent = `£${document.getElementById('wages').value}/hr`;
+            document.getElementById('fleetSizeValue').textContent = `${document.getElementById('fleetSize').value} buses`;
+            
+            const maintLevels = { 1: 'Very Low', 2: 'Low', 3: 'Medium', 4: 'High', 5: 'Very High' };
+            document.getElementById('maintenanceValue').textContent = maintLevels[document.getElementById('maintenance').value];
+            
+            document.getElementById('populationValue').textContent = `${document.getElementById('population').value}k`;
+            document.getElementById('incomeValue').textContent = `£${document.getElementById('income').value}k`;
+            document.getElementById('taxiPriceValue').textContent = `£${document.getElementById('taxiPrice').value}`;
+            document.getElementById('petrolPriceValue').textContent = `£${parseFloat(document.getElementById('petrolPrice').value).toFixed(2)}/L`;
+            
+            const weatherLabels = { 1: 'Bad 🌧️', 2: 'Normal', 3: 'Good ☀️' };
+            document.getElementById('weatherValue').textContent = weatherLabels[document.getElementById('weather').value];
+        }
+        
+        // Update the chart
+        function updateChart() {
+            const demandShift = calculateDemandShift();
+            const supplyShift = calculateSupplyShift();
+            
+            // Update shift displays
+            const supplyDisplay = supplyShift >= 0 ? `+${supplyShift.toLocaleString()}` : supplyShift.toLocaleString();
+            const demandDisplay = demandShift >= 0 ? `+${demandShift.toLocaleString()}` : demandShift.toLocaleString();
+            document.getElementById('supplyShiftDisplay').textContent = supplyDisplay;
+            document.getElementById('demandShiftDisplay').textContent = demandDisplay;
+            
+            // Generate curve data
+            const baseDemand = generateCurveData(BASE_DEMAND_INTERCEPT, DEMAND_SLOPE);
+            const baseSupply = generateCurveData(BASE_SUPPLY_INTERCEPT, SUPPLY_SLOPE);
+            const shiftedDemand = generateCurveData(BASE_DEMAND_INTERCEPT, DEMAND_SLOPE, demandShift);
+            const shiftedSupply = generateCurveData(BASE_SUPPLY_INTERCEPT, SUPPLY_SLOPE, supplyShift);
+            
+            // Calculate equilibria
+            const baseEq = calculateEquilibrium(BASE_DEMAND_INTERCEPT, BASE_SUPPLY_INTERCEPT);
+            const shiftedEq = calculateEquilibrium(BASE_DEMAND_INTERCEPT + demandShift, BASE_SUPPLY_INTERCEPT + supplyShift);
+            
+            const priceChange = shiftedEq.price - baseEq.price;
+            const qtyChange = shiftedEq.quantity - baseEq.quantity;
+            
+            // Update equilibrium display
+            document.getElementById('basePrice').textContent = `£${baseEq.price.toFixed(2)}`;
+            document.getElementById('baseQty').textContent = `${Math.round(baseEq.quantity).toLocaleString()} riders`;
+            document.getElementById('shiftedPrice').textContent = `£${shiftedEq.price.toFixed(2)}`;
+            document.getElementById('shiftedQty').textContent = `${Math.round(shiftedEq.quantity).toLocaleString()} riders`;
+            
+            // Update change display
+            const priceChangeEl = document.getElementById('priceChange');
+            const qtyChangeEl = document.getElementById('qtyChange');
+            
+            if (priceChange > 0.01) {
+                priceChangeEl.textContent = `↑ £${priceChange.toFixed(2)}`;
+                priceChangeEl.className = 'change-indicator up';
+            } else if (priceChange < -0.01) {
+                priceChangeEl.textContent = `↓ £${Math.abs(priceChange).toFixed(2)}`;
+                priceChangeEl.className = 'change-indicator down';
+            } else {
+                priceChangeEl.textContent = 'No change';
+                priceChangeEl.className = 'change-indicator neutral';
+            }
+            
+            const qtyChangeFormatted = qtyChange >= 0 ? `+${Math.round(qtyChange).toLocaleString()}` : Math.round(qtyChange).toLocaleString();
+            qtyChangeEl.textContent = `${qtyChangeFormatted} riders`;
+            
+            // Update explanation
+            document.getElementById('explanationText').textContent = generateExplanation(demandShift, supplyShift, priceChange, qtyChange);
+            
+            // Update chart data
+            chart.data.datasets[0].data = baseDemand;
+            chart.data.datasets[1].data = baseSupply;
+            chart.data.datasets[2].data = shiftedDemand;
+            chart.data.datasets[3].data = shiftedSupply;
+            
+            // Add equilibrium points
+            chart.data.datasets[4].data = [{ x: baseEq.quantity, y: baseEq.price }];
+            chart.data.datasets[5].data = [{ x: shiftedEq.quantity, y: shiftedEq.price }];
+            
+            chart.update('none');
+        }
+        
+        // Reset all values
+        function resetAll() {
+            document.getElementById('fuelCost').value = DEFAULTS.fuelCost;
+            document.getElementById('wages').value = DEFAULTS.wages;
+            document.getElementById('fleetSize').value = DEFAULTS.fleetSize;
+            document.getElementById('maintenance').value = DEFAULTS.maintenance;
+            document.getElementById('population').value = DEFAULTS.population;
+            document.getElementById('income').value = DEFAULTS.income;
+            document.getElementById('taxiPrice').value = DEFAULTS.taxiPrice;
+            document.getElementById('petrolPrice').value = DEFAULTS.petrolPrice;
+            document.getElementById('weather').value = DEFAULTS.weather;
+            
+            updateValueDisplays();
+            updateChart();
+        }
+        
+        // Initialize chart
+        function initChart() {
+            const ctx = document.getElementById('chart').getContext('2d');
+            
+            chart = new Chart(ctx, {
+                type: 'scatter',
+                data: {
+                    datasets: [
+                        {
+                            label: 'Base Demand',
+                            data: [],
+                            borderColor: '#FFB3B3',
+                            borderWidth: 3,
+                            borderDash: [10, 5],
+                            showLine: true,
+                            pointRadius: 0,
+                            tension: 0
+                        },
+                        {
+                            label: 'Base Supply',
+                            data: [],
+                            borderColor: '#B3D9FF',
+                            borderWidth: 3,
+                            borderDash: [10, 5],
+                            showLine: true,
+                            pointRadius: 0,
+                            tension: 0
+                        },
+                        {
+                            label: 'New Demand',
+                            data: [],
+                            borderColor: '#FF0000',
+                            borderWidth: 4,
+                            showLine: true,
+                            pointRadius: 0,
+                            tension: 0
+                        },
+                        {
+                            label: 'New Supply',
+                            data: [],
+                            borderColor: '#0066CC',
+                            borderWidth: 4,
+                            showLine: true,
+                            pointRadius: 0,
+                            tension: 0
+                        },
+                        {
+                            label: 'Base Equilibrium',
+                            data: [],
+                            backgroundColor: '#888888',
+                            borderColor: '#000',
+                            borderWidth: 2,
+                            pointRadius: 10,
+                            pointStyle: 'circle'
+                        },
+                        {
+                            label: 'New Equilibrium',
+                            data: [],
+                            backgroundColor: '#FFD700',
+                            borderColor: '#000',
+                            borderWidth: 3,
+                            pointRadius: 14,
+                            pointStyle: 'star'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        title: {
+                            display: true,
+                            text: 'Supply & Demand Curves',
+                            font: { size: 18, weight: 'bold' },
+                            color: '#1F4E79'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `Price: £${context.parsed.y.toFixed(2)}, Qty: ${Math.round(context.parsed.x).toLocaleString()}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            type: 'linear',
+                            position: 'bottom',
+                            title: {
+                                display: true,
+                                text: 'Quantity (riders/seats)',
+                                font: { size: 14, weight: 'bold' }
+                            },
+                            min: 0,
+                            max: 18000,
+                            grid: {
+                                color: '#eee'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Price (£)',
+                                font: { size: 14, weight: 'bold' }
+                            },
+                            min: 0,
+                            max: 14,
+                            grid: {
+                                color: '#eee'
+                            }
+                        }
+                    }
+                }
+            });
+            
+            updateChart();
+        }
+        
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            initChart();
+            
+            // All slider events
+            const sliders = ['fuelCost', 'wages', 'fleetSize', 'maintenance', 'population', 'income', 'taxiPrice', 'petrolPrice', 'weather'];
+            
+            sliders.forEach(id => {
+                document.getElementById(id).addEventListener('input', function() {
+                    updateValueDisplays();
+                    updateChart();
+                });
+            });
+            
+            updateValueDisplays();
+        });
+    </script>
+
+    <footer style="text-align: center; padding: 20px; margin-top: 30px; color: rgba(255,255,255,0.8); font-size: 0.85em;">
+        <p style="background: rgba(255,193,7,0.2); border: 1px solid rgba(255,193,7,0.4); border-radius: 8px; padding: 12px 15px; margin-bottom: 15px; font-size: 0.9em; color: rgba(255,255,255,0.9); max-width: 800px; margin-left: auto; margin-right: auto;">
+            ⚠️ <strong>Note:</strong> This simulation is for educational demonstration purposes only. Results may differ significantly from real-world outcomes. It illustrates theoretical concepts based on the parameters you configure.
+        </p>
+        <p>© 2025 Dr Mohit Kumar Singh. All rights reserved.</p>
+        <p style="margin-top: 5px; font-size: 0.8em; opacity: 0.7;">TRAN1060: Passenger and Freight Transport | For educational purposes only.</p>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚗 Modal Split & Mode Choice Calculator | Transport Economics</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a5276 0%, #2980b9 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container { max-width: 1500px; margin: 0 auto; }
+        
+        h1 {
+            text-align: center;
+            color: white;
+            margin-bottom: 8px;
+            font-size: 2em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: rgba(255,255,255,0.9);
+            margin-bottom: 20px;
+            font-size: 0.95em;
+        }
+        
+        .theory-banner {
+            background: rgba(255,255,255,0.95);
+            border-radius: 12px;
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            border-left: 5px solid #f39c12;
+        }
+        
+        .theory-banner h3 {
+            color: #1a5276;
+            margin-bottom: 8px;
+            font-size: 1em;
+        }
+        
+        .theory-banner p {
+            color: #555;
+            font-size: 0.9em;
+            line-height: 1.5;
+        }
+        
+        .main-grid {
+            display: grid;
+            grid-template-columns: 400px 1fr;
+            gap: 20px;
+        }
+        
+        @media (max-width: 1100px) {
+            .main-grid { grid-template-columns: 1fr; }
+        }
+        
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 18px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+            margin-bottom: 15px;
+        }
+        
+        .card h2 {
+            color: #1a5276;
+            font-size: 1em;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #3498db;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .slider-group {
+            margin-bottom: 18px;
+        }
+        
+        .slider-group label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85em;
+            color: #555;
+            margin-bottom: 8px;
+        }
+        
+        .slider-group label .value {
+            font-weight: bold;
+            color: #1a5276;
+            background: #e8f4f8;
+            padding: 3px 10px;
+            border-radius: 12px;
+        }
+        
+        .slider-group input[type="range"] {
+            width: 100%;
+            height: 8px;
+            border-radius: 4px;
+            -webkit-appearance: none;
+            background: linear-gradient(to right, #bdc3c7, #3498db);
+        }
+        
+        .slider-group input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #1a5276;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        }
+        
+        .slider-hint {
+            font-size: 0.75em;
+            color: #888;
+            margin-top: 4px;
+            font-style: italic;
+        }
+        
+        .results-area { display: flex; flex-direction: column; gap: 15px; }
+        
+        .chart-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+        }
+        
+        .chart-card h3 {
+            color: #1a5276;
+            font-size: 1em;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .chart-wrapper { height: 300px; }
+        .chart-wrapper-small { height: 250px; }
+        
+        .charts-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        @media (max-width: 900px) {
+            .charts-row { grid-template-columns: 1fr; }
+        }
+        
+        .mode-cards {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        @media (max-width: 700px) {
+            .mode-cards { grid-template-columns: repeat(3, 1fr); }
+        }
+        
+        .mode-card {
+            text-align: center;
+            padding: 15px 10px;
+            border-radius: 10px;
+            transition: all 0.3s;
+        }
+        
+        .mode-card .icon { font-size: 2em; margin-bottom: 8px; }
+        .mode-card .name { font-size: 0.8em; color: #555; margin-bottom: 5px; }
+        .mode-card .share { font-size: 1.4em; font-weight: bold; }
+        
+        .mode-card.car { background: linear-gradient(135deg, #ffebee, #ffcdd2); }
+        .mode-card.car .share { color: #c0392b; }
+        
+        .mode-card.bus { background: linear-gradient(135deg, #e3f2fd, #bbdefb); }
+        .mode-card.bus .share { color: #1976d2; }
+        
+        .mode-card.rail { background: linear-gradient(135deg, #e8f5e9, #c8e6c9); }
+        .mode-card.rail .share { color: #388e3c; }
+        
+        .mode-card.cycle { background: linear-gradient(135deg, #fff3e0, #ffe0b2); }
+        .mode-card.cycle .share { color: #f57c00; }
+        
+        .mode-card.walk { background: linear-gradient(135deg, #f3e5f5, #e1bee7); }
+        .mode-card.walk .share { color: #7b1fa2; }
+        
+        .insight-box {
+            background: linear-gradient(135deg, #1a5276, #2980b9);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 15px;
+        }
+        
+        .insight-box h3 {
+            color: #f39c12;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .insight-box p {
+            font-size: 0.9em;
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+        
+        .insight-box ul {
+            margin-left: 20px;
+            font-size: 0.85em;
+        }
+        
+        .insight-box li { margin-bottom: 5px; }
+        
+        .formula-box {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+            text-align: center;
+        }
+        
+        .formula-box .title {
+            font-family: 'Segoe UI', sans-serif;
+            font-weight: bold;
+            color: #1a5276;
+            margin-bottom: 8px;
+        }
+        
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+            width: 100%;
+            margin-top: 10px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(39, 174, 96, 0.4);
+        }
+        
+        .scenario-btns {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-top: 15px;
+        }
+        
+        .scenario-btn {
+            padding: 10px;
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.8em;
+            transition: all 0.2s;
+        }
+        
+        .scenario-btn:hover {
+            background: #e8f4f8;
+            border-color: #3498db;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 20px;
+            margin-top: 30px;
+            color: rgba(255,255,255,0.8);
+            font-size: 0.85em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="index.html" style="display: inline-flex; align-items: center; gap: 8px; color: white; text-decoration: none; background: rgba(255,255,255,0.15); padding: 10px 20px; border-radius: 25px; font-size: 0.9em; margin-bottom: 15px; transition: background 0.2s;">
+            <span>←</span> <span>Return to Home Page</span>
+        </a>
+        <h1>🚗 Modal Split & Mode Choice Calculator</h1>
+        <p class="subtitle">Explore how socioeconomic factors influence transport mode selection | Based on UK Transport Data</p>
+        
+        <div class="theory-banner">
+            <h3>📚 Key Theory: Modal Split & Utility</h3>
+            <p><strong>Modal Split</strong> is the percentage distribution of travellers using different transport modes. <strong>Mode Choice</strong> is influenced by <em>utility</em> — the satisfaction or benefit a traveller gains from choosing a particular mode. Factors include cost, time, comfort, reliability, and environmental awareness. Understanding these relationships is crucial for transport planning and achieving sustainable mobility goals.</p>
+        </div>
+        
+        <div class="main-grid">
+            <div class="controls">
+                <div class="card">
+                    <h2>👤 Traveller Characteristics</h2>
+                    
+                    <div class="slider-group">
+                        <label>
+                            <span>Annual Household Income</span>
+                            <span class="value" id="incomeValue">£35,000</span>
+                        </label>
+                        <input type="range" id="income" min="15000" max="100000" value="35000" step="5000">
+                        <div class="slider-hint">Higher income → more car ownership, less bus usage</div>
+                    </div>
+                    
+                    <div class="slider-group">
+                        <label>
+                            <span>Journey Distance</span>
+                            <span class="value" id="distanceValue">10 km</span>
+                        </label>
+                        <input type="range" id="distance" min="1" max="100" value="10" step="1">
+                        <div class="slider-hint">Short trips favour walking/cycling; long trips favour rail/car</div>
+                    </div>
+                    
+                    <div class="slider-group">
+                        <label>
+                            <span>Car Ownership (vehicles/household)</span>
+                            <span class="value" id="carOwnershipValue">1.2</span>
+                        </label>
+                        <input type="range" id="carOwnership" min="0" max="3" value="1.2" step="0.1">
+                        <div class="slider-hint">UK average: 1.2 cars per household</div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h2>🌍 External Factors</h2>
+                    
+                    <div class="slider-group">
+                        <label>
+                            <span>Fuel Price (per litre)</span>
+                            <span class="value" id="fuelPriceValue">£1.45</span>
+                        </label>
+                        <input type="range" id="fuelPrice" min="1.00" max="2.50" value="1.45" step="0.05">
+                        <div class="slider-hint">Higher fuel prices → modal shift to public transport</div>
+                    </div>
+                    
+                    <div class="slider-group">
+                        <label>
+                            <span>Public Transport Quality (1-10)</span>
+                            <span class="value" id="ptQualityValue">6</span>
+                        </label>
+                        <input type="range" id="ptQuality" min="1" max="10" value="6" step="1">
+                        <div class="slider-hint">Frequency, reliability, comfort of buses/trains</div>
+                    </div>
+                    
+                    <div class="slider-group">
+                        <label>
+                            <span>Cycling Infrastructure (1-10)</span>
+                            <span class="value" id="cycleInfraValue">4</span>
+                        </label>
+                        <input type="range" id="cycleInfra" min="1" max="10" value="4" step="1">
+                        <div class="slider-hint">Dedicated lanes, safety, bike parking</div>
+                    </div>
+                    
+                    <div class="slider-group">
+                        <label>
+                            <span>Congestion Level (1-10)</span>
+                            <span class="value" id="congestionValue">5</span>
+                        </label>
+                        <input type="range" id="congestion" min="1" max="10" value="5" step="1">
+                        <div class="slider-hint">High congestion → discourages car use</div>
+                    </div>
+                    
+                    <div class="slider-group">
+                        <label>
+                            <span>Environmental Awareness (1-10)</span>
+                            <span class="value" id="envAwarenessValue">5</span>
+                        </label>
+                        <input type="range" id="envAwareness" min="1" max="10" value="5" step="1">
+                        <div class="slider-hint">Higher awareness → preference for sustainable modes</div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h2>🎯 Preset Scenarios</h2>
+                    <div class="scenario-btns">
+                        <button class="scenario-btn" onclick="loadScenario('london')">🏙️ Central London</button>
+                        <button class="scenario-btn" onclick="loadScenario('rural')">🌾 Rural Area</button>
+                        <button class="scenario-btn" onclick="loadScenario('suburban')">🏘️ Suburban Town</button>
+                        <button class="scenario-btn" onclick="loadScenario('dutch')">🇳🇱 Dutch-style City</button>
+                        <button class="scenario-btn" onclick="loadScenario('highFuel')">⛽ Fuel Crisis</button>
+                        <button class="scenario-btn" onclick="loadScenario('student')">🎓 Student Area</button>
+                    </div>
+                    <button class="btn btn-primary" onclick="resetToDefault()">🔄 Reset to UK Average</button>
+                </div>
+                
+                <div class="card">
+                    <h2>📐 The Utility Function</h2>
+                    <div class="formula-box">
+                        <div class="title">Generalised Cost of Travel</div>
+                        <div>C = c + (VOT × t) + θ</div>
+                    </div>
+                    <p style="font-size: 0.8em; color: #666; line-height: 1.5;">
+                        Where: <strong>c</strong> = monetary cost, <strong>VOT</strong> = value of time, 
+                        <strong>t</strong> = travel time, <strong>θ</strong> = other factors (comfort, reliability, environment).
+                        Mode with lowest generalised cost has highest utility.
+                    </p>
+                </div>
+            </div>
+            
+            <div class="results-area">
+                <div class="chart-card">
+                    <h3>📊 Current Modal Split</h3>
+                    <div class="mode-cards" id="modeCards">
+                        <div class="mode-card car">
+                            <div class="icon">🚗</div>
+                            <div class="name">Car</div>
+                            <div class="share" id="carShare">62%</div>
+                        </div>
+                        <div class="mode-card bus">
+                            <div class="icon">🚌</div>
+                            <div class="name">Bus</div>
+                            <div class="share" id="busShare">8%</div>
+                        </div>
+                        <div class="mode-card rail">
+                            <div class="icon">🚆</div>
+                            <div class="name">Rail</div>
+                            <div class="share" id="railShare">10%</div>
+                        </div>
+                        <div class="mode-card cycle">
+                            <div class="icon">🚴</div>
+                            <div class="name">Cycle</div>
+                            <div class="share" id="cycleShare">3%</div>
+                        </div>
+                        <div class="mode-card walk">
+                            <div class="icon">🚶</div>
+                            <div class="name">Walk</div>
+                            <div class="share" id="walkShare">17%</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="charts-row">
+                    <div class="chart-card">
+                        <h3>🥧 Modal Split Distribution</h3>
+                        <div class="chart-wrapper-small">
+                            <canvas id="pieChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-card">
+                        <h3>📈 Distance vs Mode Choice</h3>
+                        <div class="chart-wrapper-small">
+                            <canvas id="distanceChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="chart-card">
+                    <h3>💷 Generalised Cost Comparison (for your journey)</h3>
+                    <div class="chart-wrapper">
+                        <canvas id="costChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="insight-box">
+                    <h3>💡 Policy Insights</h3>
+                    <p id="insightText">Adjust the sliders to see how different factors influence modal split and discover policy implications.</p>
+                    <ul id="insightList">
+                        <li>Current car dependency is typical for UK suburban areas</li>
+                        <li>Improving public transport quality could shift 5-10% of car trips</li>
+                        <li>Better cycling infrastructure could double cycling mode share</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p style="background: rgba(255,193,7,0.2); border: 1px solid rgba(255,193,7,0.4); border-radius: 8px; padding: 12px 15px; margin-bottom: 15px; font-size: 0.8em; color: #333;">
+                ⚠️ <strong>Note:</strong> This simulation is for educational demonstration purposes only. Results may differ significantly from real-world outcomes. It illustrates theoretical concepts based on the parameters you configure.
+            </p>
+            <p>© 2025 Dr Mohit Kumar Singh. All rights reserved.</p>
+            <p style="margin-top: 5px; font-size: 0.8em; opacity: 0.7;">TRAN1060: Passenger and Freight Transport | For educational purposes only.</p>
+        </footer>
+    </div>
+
+    <script>
+        let pieChart, distanceChart, costChart;
+        
+        // Scenarios
+        const scenarios = {
+            london: { income: 50000, distance: 8, carOwnership: 0.5, fuelPrice: 1.50, ptQuality: 8, cycleInfra: 6, congestion: 9, envAwareness: 7 },
+            rural: { income: 32000, distance: 25, carOwnership: 2.0, fuelPrice: 1.45, ptQuality: 3, cycleInfra: 2, congestion: 2, envAwareness: 4 },
+            suburban: { income: 40000, distance: 15, carOwnership: 1.5, fuelPrice: 1.45, ptQuality: 5, cycleInfra: 4, congestion: 6, envAwareness: 5 },
+            dutch: { income: 38000, distance: 8, carOwnership: 0.8, fuelPrice: 1.80, ptQuality: 9, cycleInfra: 10, congestion: 4, envAwareness: 9 },
+            highFuel: { income: 35000, distance: 12, carOwnership: 1.2, fuelPrice: 2.30, ptQuality: 6, cycleInfra: 4, congestion: 5, envAwareness: 6 },
+            student: { income: 18000, distance: 5, carOwnership: 0.3, fuelPrice: 1.45, ptQuality: 7, cycleInfra: 5, congestion: 5, envAwareness: 7 }
+        };
+        
+        function getInputs() {
+            return {
+                income: parseFloat(document.getElementById('income').value),
+                distance: parseFloat(document.getElementById('distance').value),
+                carOwnership: parseFloat(document.getElementById('carOwnership').value),
+                fuelPrice: parseFloat(document.getElementById('fuelPrice').value),
+                ptQuality: parseFloat(document.getElementById('ptQuality').value),
+                cycleInfra: parseFloat(document.getElementById('cycleInfra').value),
+                congestion: parseFloat(document.getElementById('congestion').value),
+                envAwareness: parseFloat(document.getElementById('envAwareness').value)
+            };
+        }
+        
+        function calculateModalSplit(inputs) {
+            let { income, distance, carOwnership, fuelPrice, ptQuality, cycleInfra, congestion, envAwareness } = inputs;
+            
+            // Base modal split (UK average)
+            let car = 62, bus = 8, rail = 10, cycle = 3, walk = 17;
+            
+            // Income effect (higher income = more car, less bus)
+            const incomeEffect = (income - 35000) / 10000;
+            car += incomeEffect * 3;
+            bus -= incomeEffect * 2;
+            
+            // Car ownership effect
+            const carEffect = (carOwnership - 1.2) * 10;
+            car += carEffect;
+            bus -= carEffect * 0.3;
+            rail -= carEffect * 0.3;
+            
+            // Fuel price effect
+            const fuelEffect = (fuelPrice - 1.45) * 15;
+            car -= fuelEffect;
+            bus += fuelEffect * 0.4;
+            rail += fuelEffect * 0.4;
+            cycle += fuelEffect * 0.1;
+            walk += fuelEffect * 0.1;
+            
+            // Public transport quality effect
+            const ptEffect = (ptQuality - 6) * 2;
+            bus += ptEffect * 0.6;
+            rail += ptEffect * 0.4;
+            car -= ptEffect;
+            
+            // Cycling infrastructure effect
+            const cycleEffect = (cycleInfra - 4) * 1.5;
+            cycle += cycleEffect;
+            car -= cycleEffect * 0.5;
+            
+            // Congestion effect
+            const congEffect = (congestion - 5) * 1.5;
+            car -= congEffect;
+            bus += congEffect * 0.3;
+            rail += congEffect * 0.4;
+            cycle += congEffect * 0.15;
+            walk += congEffect * 0.15;
+            
+            // Environmental awareness effect
+            const envEffect = (envAwareness - 5) * 1.2;
+            car -= envEffect;
+            cycle += envEffect * 0.3;
+            walk += envEffect * 0.3;
+            rail += envEffect * 0.2;
+            bus += envEffect * 0.2;
+            
+            // Distance effect
+            if (distance < 3) {
+                walk += 25;
+                cycle += 10;
+                car -= 25;
+                bus -= 5;
+                rail -= 5;
+            } else if (distance < 8) {
+                cycle += 5;
+                walk -= 10;
+            } else if (distance > 30) {
+                rail += 15;
+                car += 5;
+                walk = Math.max(1, walk - 15);
+                cycle = Math.max(1, cycle - 3);
+                bus -= 5;
+            }
+            
+            // Ensure no negative values and normalise to 100%
+            car = Math.max(5, car);
+            bus = Math.max(2, bus);
+            rail = Math.max(2, rail);
+            cycle = Math.max(1, cycle);
+            walk = Math.max(2, walk);
+            
+            const total = car + bus + rail + cycle + walk;
+            
+            return {
+                car: (car / total * 100),
+                bus: (bus / total * 100),
+                rail: (rail / total * 100),
+                cycle: (cycle / total * 100),
+                walk: (walk / total * 100)
+            };
+        }
+        
+        function calculateGeneralisedCosts(inputs) {
+            const { distance, fuelPrice, ptQuality, congestion, income } = inputs;
+            const VOT = income / 2000; // Value of time in £/hour
+            
+            // Car: fuel cost + time cost + parking
+            const carSpeed = Math.max(15, 50 - congestion * 3); // km/h
+            const carTime = distance / carSpeed; // hours
+            const carFuelCost = distance * 0.12 * fuelPrice; // 12p/km at base fuel price
+            const carParking = distance > 5 ? 3 : 0;
+            const carCost = carFuelCost + carParking + VOT * carTime;
+            
+            // Bus: fare + time cost
+            const busSpeed = Math.max(10, 25 - congestion * 1.5);
+            const busTime = distance / busSpeed + 0.25; // including wait time
+            const busFare = Math.min(2 + distance * 0.1, 5); // capped fare
+            const busComfort = (10 - ptQuality) * 0.3;
+            const busCost = busFare + VOT * busTime + busComfort;
+            
+            // Rail: fare + time cost
+            const railSpeed = 60;
+            const railTime = distance / railSpeed + 0.33; // including access time
+            const railFare = 2.5 + distance * 0.15;
+            const railComfort = (10 - ptQuality) * 0.2;
+            const railCost = railFare + VOT * railTime + railComfort;
+            
+            // Cycle: time cost + effort
+            const cycleSpeed = 15;
+            const cycleTime = distance / cycleSpeed;
+            const cycleEffort = distance * 0.15;
+            const cycleCost = VOT * cycleTime + cycleEffort;
+            
+            // Walk: time cost
+            const walkSpeed = 5;
+            const walkTime = distance / walkSpeed;
+            const walkCost = VOT * walkTime;
+            
+            return {
+                car: Math.max(0.5, carCost),
+                bus: Math.max(0.5, busCost),
+                rail: Math.max(0.5, railCost),
+                cycle: distance <= 15 ? Math.max(0.1, cycleCost) : 999,
+                walk: distance <= 5 ? Math.max(0.1, walkCost) : 999
+            };
+        }
+        
+        function generateDistanceData() {
+            const inputs = getInputs();
+            const distances = [1, 2, 3, 5, 8, 10, 15, 20, 30, 50, 75, 100];
+            const data = { car: [], bus: [], rail: [], cycle: [], walk: [] };
+            
+            distances.forEach(d => {
+                const tempInputs = { ...inputs, distance: d };
+                const split = calculateModalSplit(tempInputs);
+                data.car.push(split.car);
+                data.bus.push(split.bus);
+                data.rail.push(split.rail);
+                data.cycle.push(split.cycle);
+                data.walk.push(split.walk);
+            });
+            
+            return { distances, data };
+        }
+        
+        function generateInsights(inputs, split) {
+            const insights = [];
+            
+            if (split.car > 70) {
+                insights.push("High car dependency detected — typical of car-dependent areas with limited alternatives");
+            }
+            if (split.car < 40) {
+                insights.push("Low car mode share indicates good sustainable transport options");
+            }
+            if (inputs.fuelPrice > 1.80) {
+                insights.push("High fuel prices are driving modal shift away from private cars");
+            }
+            if (inputs.ptQuality >= 8) {
+                insights.push("Excellent public transport quality is attracting users from private vehicles");
+            }
+            if (inputs.ptQuality <= 4) {
+                insights.push("Poor public transport quality limits viable alternatives to car travel");
+            }
+            if (inputs.cycleInfra >= 8) {
+                insights.push("Strong cycling infrastructure enables active travel for short-medium trips");
+            }
+            if (inputs.distance < 5 && split.walk < 30) {
+                insights.push("For short distances, walking should be higher — consider pedestrian infrastructure improvements");
+            }
+            if (inputs.congestion >= 7 && split.car > 50) {
+                insights.push("Despite high congestion, car use remains dominant — suggests lack of viable alternatives");
+            }
+            if (inputs.envAwareness >= 7) {
+                insights.push("High environmental awareness is contributing to sustainable mode choices");
+            }
+            
+            return insights.length > 0 ? insights : ["Adjust the sliders to explore different scenarios and their impacts on modal split"];
+        }
+        
+        function updateDisplays() {
+            const inputs = getInputs();
+            
+            // Update value displays
+            document.getElementById('incomeValue').textContent = `£${inputs.income.toLocaleString()}`;
+            document.getElementById('distanceValue').textContent = `${inputs.distance} km`;
+            document.getElementById('carOwnershipValue').textContent = inputs.carOwnership.toFixed(1);
+            document.getElementById('fuelPriceValue').textContent = `£${inputs.fuelPrice.toFixed(2)}`;
+            document.getElementById('ptQualityValue').textContent = inputs.ptQuality;
+            document.getElementById('cycleInfraValue').textContent = inputs.cycleInfra;
+            document.getElementById('congestionValue').textContent = inputs.congestion;
+            document.getElementById('envAwarenessValue').textContent = inputs.envAwareness;
+            
+            // Calculate modal split
+            const split = calculateModalSplit(inputs);
+            
+            // Update mode cards
+            document.getElementById('carShare').textContent = `${split.car.toFixed(1)}%`;
+            document.getElementById('busShare').textContent = `${split.bus.toFixed(1)}%`;
+            document.getElementById('railShare').textContent = `${split.rail.toFixed(1)}%`;
+            document.getElementById('cycleShare').textContent = `${split.cycle.toFixed(1)}%`;
+            document.getElementById('walkShare').textContent = `${split.walk.toFixed(1)}%`;
+            
+            // Update pie chart
+            pieChart.data.datasets[0].data = [split.car, split.bus, split.rail, split.cycle, split.walk];
+            pieChart.update('none');
+            
+            // Update distance chart
+            const distData = generateDistanceData();
+            distanceChart.data.labels = distData.distances;
+            distanceChart.data.datasets[0].data = distData.data.car;
+            distanceChart.data.datasets[1].data = distData.data.bus;
+            distanceChart.data.datasets[2].data = distData.data.rail;
+            distanceChart.data.datasets[3].data = distData.data.cycle;
+            distanceChart.data.datasets[4].data = distData.data.walk;
+            distanceChart.update('none');
+            
+            // Update cost chart
+            const costs = calculateGeneralisedCosts(inputs);
+            costChart.data.datasets[0].data = [
+                costs.car,
+                costs.bus,
+                costs.rail,
+                costs.cycle < 100 ? costs.cycle : null,
+                costs.walk < 100 ? costs.walk : null
+            ];
+            costChart.update('none');
+            
+            // Update insights
+            const insights = generateInsights(inputs, split);
+            document.getElementById('insightList').innerHTML = insights.map(i => `<li>${i}</li>`).join('');
+        }
+        
+        function loadScenario(name) {
+            const s = scenarios[name];
+            document.getElementById('income').value = s.income;
+            document.getElementById('distance').value = s.distance;
+            document.getElementById('carOwnership').value = s.carOwnership;
+            document.getElementById('fuelPrice').value = s.fuelPrice;
+            document.getElementById('ptQuality').value = s.ptQuality;
+            document.getElementById('cycleInfra').value = s.cycleInfra;
+            document.getElementById('congestion').value = s.congestion;
+            document.getElementById('envAwareness').value = s.envAwareness;
+            updateDisplays();
+        }
+        
+        function resetToDefault() {
+            document.getElementById('income').value = 35000;
+            document.getElementById('distance').value = 10;
+            document.getElementById('carOwnership').value = 1.2;
+            document.getElementById('fuelPrice').value = 1.45;
+            document.getElementById('ptQuality').value = 6;
+            document.getElementById('cycleInfra').value = 4;
+            document.getElementById('congestion').value = 5;
+            document.getElementById('envAwareness').value = 5;
+            updateDisplays();
+        }
+        
+        function initCharts() {
+            // Pie chart
+            pieChart = new Chart(document.getElementById('pieChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['Car', 'Bus', 'Rail', 'Cycle', 'Walk'],
+                    datasets: [{
+                        data: [62, 8, 10, 3, 17],
+                        backgroundColor: ['#e74c3c', '#3498db', '#27ae60', '#f39c12', '#9b59b6'],
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'right', labels: { font: { size: 11 } } }
+                    }
+                }
+            });
+            
+            // Distance chart
+            distanceChart = new Chart(document.getElementById('distanceChart'), {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [
+                        { label: 'Car', data: [], borderColor: '#e74c3c', tension: 0.3, pointRadius: 2 },
+                        { label: 'Bus', data: [], borderColor: '#3498db', tension: 0.3, pointRadius: 2 },
+                        { label: 'Rail', data: [], borderColor: '#27ae60', tension: 0.3, pointRadius: 2 },
+                        { label: 'Cycle', data: [], borderColor: '#f39c12', tension: 0.3, pointRadius: 2 },
+                        { label: 'Walk', data: [], borderColor: '#9b59b6', tension: 0.3, pointRadius: 2 }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom', labels: { font: { size: 9 } } } },
+                    scales: {
+                        x: { title: { display: true, text: 'Distance (km)' } },
+                        y: { title: { display: true, text: 'Mode Share (%)' }, min: 0, max: 100 }
+                    }
+                }
+            });
+            
+            // Cost chart
+            costChart = new Chart(document.getElementById('costChart'), {
+                type: 'bar',
+                data: {
+                    labels: ['Car', 'Bus', 'Rail', 'Cycle', 'Walk'],
+                    datasets: [{
+                        label: 'Generalised Cost (£)',
+                        data: [],
+                        backgroundColor: ['#e74c3c', '#3498db', '#27ae60', '#f39c12', '#9b59b6']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { 
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: ctx => ctx.raw ? `£${ctx.raw.toFixed(2)}` : 'Not viable for this distance'
+                            }
+                        }
+                    },
+                    scales: {
+                        y: { title: { display: true, text: 'Generalised Cost (£)' }, beginAtZero: true }
+                    }
+                }
+            });
+        }
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            initCharts();
+            
+            const sliders = ['income', 'distance', 'carOwnership', 'fuelPrice', 'ptQuality', 'cycleInfra', 'congestion', 'envAwareness'];
+            sliders.forEach(id => {
+                document.getElementById(id).addEventListener('input', updateDisplays);
+            });
+            
+            updateDisplays();
+        });
+    </script>
+</body>
+</html>

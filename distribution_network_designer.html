@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📦 Distribution Network Designer | Cost vs Responsiveness Trade-off</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container { max-width: 1600px; margin: 0 auto; }
+        
+        h1 {
+            text-align: center;
+            color: white;
+            margin-bottom: 8px;
+            font-size: 1.9em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: rgba(255,255,255,0.9);
+            margin-bottom: 20px;
+            font-size: 0.95em;
+        }
+        
+        .theory-banner {
+            background: rgba(255,255,255,0.95);
+            border-radius: 12px;
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            border-left: 5px solid #e67e22;
+        }
+        
+        .theory-banner h3 { color: #2c3e50; margin-bottom: 10px; font-size: 1em; }
+        .theory-banner p { color: #555; font-size: 0.88em; line-height: 1.5; }
+        
+        .network-types {
+            display: flex;
+            gap: 10px;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+        
+        .network-type {
+            background: #f8f9fa;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.8em;
+            border-left: 3px solid #3498db;
+        }
+        
+        .main-grid {
+            display: grid;
+            grid-template-columns: 420px 1fr;
+            gap: 20px;
+        }
+        
+        @media (max-width: 1200px) { .main-grid { grid-template-columns: 1fr; } }
+        
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 18px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+            margin-bottom: 15px;
+        }
+        
+        .card h2 {
+            color: #2c3e50;
+            font-size: 1em;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e67e22;
+        }
+        
+        .network-selector {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+        }
+        
+        .network-btn {
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.2s;
+            background: white;
+        }
+        
+        .network-btn:hover { border-color: #e67e22; background: #fef5e7; }
+        .network-btn.selected { border-color: #e67e22; background: #fef5e7; }
+        
+        .network-btn .icon { font-size: 2em; }
+        .network-btn .info { flex: 1; }
+        .network-btn .name { font-weight: bold; color: #2c3e50; font-size: 0.95em; }
+        .network-btn .desc { font-size: 0.75em; color: #666; margin-top: 3px; }
+        
+        .slider-group { margin-bottom: 18px; }
+        
+        .slider-group label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85em;
+            color: #555;
+            margin-bottom: 8px;
+        }
+        
+        .slider-group .value {
+            font-weight: bold;
+            color: #2c3e50;
+            background: #fef5e7;
+            padding: 2px 10px;
+            border-radius: 10px;
+        }
+        
+        .slider-group input[type="range"] {
+            width: 100%;
+            height: 8px;
+            border-radius: 4px;
+            -webkit-appearance: none;
+            background: linear-gradient(to right, #fad7a0, #e67e22);
+        }
+        
+        .slider-group input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #2c3e50;
+            cursor: pointer;
+        }
+        
+        .product-types {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+        
+        .product-btn {
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+            font-size: 0.85em;
+        }
+        
+        .product-btn:hover { border-color: #e67e22; }
+        .product-btn.selected { border-color: #27ae60; background: #d5f5e3; }
+        .product-btn .icon { font-size: 1.2em; }
+        
+        .results-area { display: flex; flex-direction: column; gap: 15px; }
+        
+        .network-visual {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+        }
+        
+        .network-visual h3 { color: #2c3e50; margin-bottom: 15px; text-align: center; }
+        
+        .visual-container {
+            min-height: 200px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .flow-diagram {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .flow-node {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 15px;
+            background: white;
+            border-radius: 10px;
+            border: 2px solid #ddd;
+            min-width: 80px;
+        }
+        
+        .flow-node.manufacturer { border-color: #3498db; background: #ebf5fb; }
+        .flow-node.dc { border-color: #e67e22; background: #fef5e7; }
+        .flow-node.retail { border-color: #27ae60; background: #eafaf1; }
+        .flow-node.customer { border-color: #9b59b6; background: #f5eef8; }
+        
+        .flow-node .icon { font-size: 1.8em; }
+        .flow-node .label { font-size: 0.7em; color: #666; margin-top: 5px; }
+        
+        .flow-arrow {
+            font-size: 1.5em;
+            color: #bdc3c7;
+        }
+        
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+        }
+        
+        @media (max-width: 900px) { .metrics-grid { grid-template-columns: repeat(2, 1fr); } }
+        
+        .metric-card {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            border: 2px solid #eee;
+        }
+        
+        .metric-card .icon { font-size: 1.5em; }
+        .metric-card .name { font-size: 0.8em; color: #666; margin: 5px 0; }
+        .metric-card .value { font-size: 1.4em; font-weight: bold; color: #2c3e50; }
+        .metric-card .rating { font-size: 0.7em; margin-top: 5px; padding: 3px 8px; border-radius: 10px; }
+        
+        .rating-good { background: #d5f5e3; color: #27ae60; }
+        .rating-medium { background: #fef5e7; color: #e67e22; }
+        .rating-poor { background: #fadbd8; color: #e74c3c; }
+        
+        .charts-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        @media (max-width: 900px) { .charts-row { grid-template-columns: 1fr; } }
+        
+        .chart-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+        }
+        
+        .chart-card h3 { color: #2c3e50; font-size: 0.95em; margin-bottom: 15px; text-align: center; }
+        .chart-wrapper { height: 280px; }
+        
+        .comparison-table {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            overflow-x: auto;
+        }
+        
+        .comparison-table h3 { color: #2c3e50; margin-bottom: 15px; }
+        
+        .comparison-table table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85em;
+        }
+        
+        .comparison-table th, .comparison-table td {
+            padding: 10px;
+            text-align: center;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .comparison-table th { background: #f8f9fa; color: #2c3e50; font-weight: 600; }
+        .comparison-table tr:hover { background: #fef5e7; }
+        .comparison-table tr.selected { background: #fef5e7; font-weight: bold; }
+        
+        .score-dot {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+        
+        .score-dot.high { background: #27ae60; }
+        .score-dot.medium { background: #f39c12; }
+        .score-dot.low { background: #e74c3c; }
+        
+        .insight-box {
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+        }
+        
+        .insight-box h3 { color: #e67e22; margin-bottom: 12px; }
+        .insight-box p { font-size: 0.9em; line-height: 1.6; margin-bottom: 10px; }
+        
+        .case-study {
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+        }
+        
+        .case-study h4 { color: #f39c12; margin-bottom: 8px; }
+        .case-study p { font-size: 0.85em; opacity: 0.9; }
+        
+        footer {
+            text-align: center;
+            padding: 20px;
+            margin-top: 30px;
+            color: rgba(255,255,255,0.8);
+            font-size: 0.85em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="index.html" style="display: inline-flex; align-items: center; gap: 8px; color: white; text-decoration: none; background: rgba(255,255,255,0.15); padding: 10px 20px; border-radius: 25px; font-size: 0.9em; margin-bottom: 15px; transition: background 0.2s;">
+            <span>←</span> <span>Return to Home Page</span>
+        </a>
+        <h1>📦 Distribution Network Designer</h1>
+        <p class="subtitle">Design optimal distribution networks | Analyse the cost vs responsiveness trade-off</p>
+        
+        <div class="theory-banner">
+            <h3>📚 Key Concept: Distribution Network Design</h3>
+            <p>Distribution networks directly impact supply chain costs and customer satisfaction. The key trade-off is between <strong>cost</strong> (inventory, transportation, facilities) and <strong>responsiveness</strong> (response time, product availability). More facilities = faster delivery but higher costs. The optimal design depends on product characteristics and business strategy.</p>
+            <div class="network-types">
+                <div class="network-type">🏭 Direct Shipping</div>
+                <div class="network-type">🔄 Cross-docking</div>
+                <div class="network-type">🏪 Via Distribution Centre</div>
+                <div class="network-type">🚛 Milk Run</div>
+                <div class="network-type">🏬 Retail Pickup</div>
+            </div>
+        </div>
+        
+        <div class="main-grid">
+            <div class="controls">
+                <div class="card">
+                    <h2>🔧 Select Network Design</h2>
+                    <div class="network-selector">
+                        <div class="network-btn selected" data-network="direct" onclick="selectNetwork(this)">
+                            <div class="icon">🏭➡️🏠</div>
+                            <div class="info">
+                                <div class="name">Direct Shipping</div>
+                                <div class="desc">Manufacturer ships directly to customers (Dell, Amazon)</div>
+                            </div>
+                        </div>
+                        <div class="network-btn" data-network="dc" onclick="selectNetwork(this)">
+                            <div class="icon">🏭➡️📦➡️🏠</div>
+                            <div class="info">
+                                <div class="name">Via Distribution Centre</div>
+                                <div class="desc">Products flow through regional warehouses</div>
+                            </div>
+                        </div>
+                        <div class="network-btn" data-network="crossdock" onclick="selectNetwork(this)">
+                            <div class="icon">🏭➡️🔄➡️🏠</div>
+                            <div class="info">
+                                <div class="name">Cross-docking</div>
+                                <div class="desc">In-transit merge, minimal storage (Walmart)</div>
+                            </div>
+                        </div>
+                        <div class="network-btn" data-network="milkrun" onclick="selectNetwork(this)">
+                            <div class="icon">🏭➡️🚛🔁➡️🏠</div>
+                            <div class="info">
+                                <div class="name">Milk Run Delivery</div>
+                                <div class="desc">Single vehicle serves multiple locations (FMCG)</div>
+                            </div>
+                        </div>
+                        <div class="network-btn" data-network="retail" onclick="selectNetwork(this)">
+                            <div class="icon">🏭➡️🏪➡️🏠</div>
+                            <div class="info">
+                                <div class="name">Retail Pickup</div>
+                                <div class="desc">Customer collects from retail stores (IKEA)</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h2>📦 Product Type</h2>
+                    <div class="product-types">
+                        <div class="product-btn selected" data-product="general" onclick="selectProduct(this)">
+                            <div class="icon">📦</div>
+                            <div>General Goods</div>
+                        </div>
+                        <div class="product-btn" data-product="highvalue" onclick="selectProduct(this)">
+                            <div class="icon">💎</div>
+                            <div>High Value</div>
+                        </div>
+                        <div class="product-btn" data-product="perishable" onclick="selectProduct(this)">
+                            <div class="icon">🥬</div>
+                            <div>Perishables</div>
+                        </div>
+                        <div class="product-btn" data-product="bulky" onclick="selectProduct(this)">
+                            <div class="icon">🛋️</div>
+                            <div>Bulky Items</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h2>⚙️ Network Parameters</h2>
+                    
+                    <div class="slider-group">
+                        <label>
+                            <span>Number of Facilities</span>
+                            <span class="value" id="facilitiesValue">3</span>
+                        </label>
+                        <input type="range" id="numFacilities" min="1" max="10" value="3" step="1">
+                    </div>
+                    
+                    <div class="slider-group">
+                        <label>
+                            <span>Daily Order Volume</span>
+                            <span class="value" id="volumeValue">1,000</span>
+                        </label>
+                        <input type="range" id="orderVolume" min="100" max="10000" value="1000" step="100">
+                    </div>
+                    
+                    <div class="slider-group">
+                        <label>
+                            <span>Average Order Value (£)</span>
+                            <span class="value" id="orderValueDisplay">£50</span>
+                        </label>
+                        <input type="range" id="orderValue" min="10" max="500" value="50" step="10">
+                    </div>
+                    
+                    <div class="slider-group">
+                        <label>
+                            <span>Customer Density (1-10)</span>
+                            <span class="value" id="densityValue">5</span>
+                        </label>
+                        <input type="range" id="customerDensity" min="1" max="10" value="5" step="1">
+                    </div>
+                    
+                    <div class="slider-group">
+                        <label>
+                            <span>Target Response Time (days)</span>
+                            <span class="value" id="responseValue">3</span>
+                        </label>
+                        <input type="range" id="targetResponse" min="1" max="14" value="3" step="1">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="results-area">
+                <div class="network-visual">
+                    <h3>🔗 Network Flow Diagram</h3>
+                    <div class="visual-container">
+                        <div class="flow-diagram" id="flowDiagram">
+                            <!-- Generated dynamically -->
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="icon">💷</div>
+                        <div class="name">Total Cost/Order</div>
+                        <div class="value" id="totalCost">£12.50</div>
+                        <div class="rating rating-medium" id="costRating">Medium</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="icon">⏱️</div>
+                        <div class="name">Response Time</div>
+                        <div class="value" id="responseTime">2.5 days</div>
+                        <div class="rating rating-good" id="timeRating">Fast</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="icon">📊</div>
+                        <div class="name">Product Availability</div>
+                        <div class="value" id="availability">94%</div>
+                        <div class="rating rating-good" id="availRating">High</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="icon">🔄</div>
+                        <div class="name">Returnability</div>
+                        <div class="value" id="returnability">Easy</div>
+                        <div class="rating rating-good" id="returnRating">Good</div>
+                    </div>
+                </div>
+                
+                <div class="charts-row">
+                    <div class="chart-card">
+                        <h3>💰 Cost Breakdown</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="costBreakdown"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-card">
+                        <h3>📈 Cost vs Facilities Trade-off</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="tradeoffChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="comparison-table">
+                    <h3>📋 Network Design Comparison</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Network Type</th>
+                                <th>Inventory Cost</th>
+                                <th>Transport Cost</th>
+                                <th>Response Time</th>
+                                <th>Availability</th>
+                                <th>Best For</th>
+                            </tr>
+                        </thead>
+                        <tbody id="comparisonBody">
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="insight-box">
+                    <h3>💡 Design Recommendation</h3>
+                    <p id="insightText">
+                        Based on your parameters, a Distribution Centre model with 3 facilities offers the best balance 
+                        of cost and responsiveness for general goods with moderate order volumes.
+                    </p>
+                    <div class="case-study">
+                        <h4>📖 Case Study: IKEA's Distribution Strategy</h4>
+                        <p>IKEA uses a hybrid approach: direct supplier-to-store for 50%+ of products, 
+                        independent DCs for online orders, and in-store inventory for customer pickup. 
+                        They minimise transport costs through flat-pack design and outsource last-mile delivery.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p style="background: rgba(255,193,7,0.2); border: 1px solid rgba(255,193,7,0.4); border-radius: 8px; padding: 12px 15px; margin-bottom: 15px; font-size: 0.8em; color: #333;">
+                ⚠️ <strong>Note:</strong> This simulation is for educational demonstration purposes only. Results may differ significantly from real-world outcomes. It illustrates theoretical concepts based on the parameters you configure.
+            </p>
+            <p>© 2025 Dr Mohit Kumar Singh. All rights reserved.</p>
+            <p style="margin-top: 5px; font-size: 0.8em; opacity: 0.7;">TRAN1060: Passenger and Freight Transport | For educational purposes only.</p>
+        </footer>
+    </div>
+
+    <script>
+        let costBreakdown, tradeoffChart;
+        let selectedNetwork = 'direct';
+        let selectedProduct = 'general';
+        
+        const networkData = {
+            direct: {
+                name: 'Direct Shipping',
+                inventoryCostBase: 0.5,
+                transportCostBase: 8,
+                facilityMultiplier: 0.2,
+                responseBase: 4,
+                availability: 85,
+                returnability: 'Hard',
+                bestFor: 'High value, low volume',
+                diagram: ['manufacturer', 'arrow', 'customer']
+            },
+            dc: {
+                name: 'Via Distribution Centre',
+                inventoryCostBase: 3,
+                transportCostBase: 4,
+                facilityMultiplier: 1.5,
+                responseBase: 2,
+                availability: 95,
+                returnability: 'Medium',
+                bestFor: 'General goods, medium volume',
+                diagram: ['manufacturer', 'arrow', 'dc', 'arrow', 'customer']
+            },
+            crossdock: {
+                name: 'Cross-docking',
+                inventoryCostBase: 0.8,
+                transportCostBase: 5,
+                facilityMultiplier: 0.8,
+                responseBase: 2.5,
+                availability: 90,
+                returnability: 'Medium',
+                bestFor: 'Predictable, large volumes',
+                diagram: ['manufacturer', 'arrow', 'dc', 'arrow', 'customer']
+            },
+            milkrun: {
+                name: 'Milk Run Delivery',
+                inventoryCostBase: 2,
+                transportCostBase: 3,
+                facilityMultiplier: 1,
+                responseBase: 1.5,
+                availability: 92,
+                returnability: 'Easy',
+                bestFor: 'FMCG, dense customer areas',
+                diagram: ['manufacturer', 'arrow', 'dc', 'arrow', 'retail', 'arrow', 'customer']
+            },
+            retail: {
+                name: 'Retail Pickup',
+                inventoryCostBase: 4,
+                transportCostBase: 2,
+                facilityMultiplier: 2,
+                responseBase: 0.5,
+                availability: 98,
+                returnability: 'Easy',
+                bestFor: 'Bulky items, click & collect',
+                diagram: ['manufacturer', 'arrow', 'retail', 'arrow', 'customer']
+            }
+        };
+        
+        const productMultipliers = {
+            general: { inventory: 1, transport: 1, handling: 1 },
+            highvalue: { inventory: 1.5, transport: 1.2, handling: 1.3 },
+            perishable: { inventory: 0.3, transport: 1.5, handling: 1.2 },
+            bulky: { inventory: 1.2, transport: 1.8, handling: 1.5 }
+        };
+        
+        function selectNetwork(element) {
+            document.querySelectorAll('.network-btn').forEach(btn => btn.classList.remove('selected'));
+            element.classList.add('selected');
+            selectedNetwork = element.dataset.network;
+            updateAll();
+        }
+        
+        function selectProduct(element) {
+            document.querySelectorAll('.product-btn').forEach(btn => btn.classList.remove('selected'));
+            element.classList.add('selected');
+            selectedProduct = element.dataset.product;
+            updateAll();
+        }
+        
+        function getInputs() {
+            return {
+                facilities: parseFloat(document.getElementById('numFacilities').value),
+                volume: parseFloat(document.getElementById('orderVolume').value),
+                orderValue: parseFloat(document.getElementById('orderValue').value),
+                density: parseFloat(document.getElementById('customerDensity').value),
+                targetResponse: parseFloat(document.getElementById('targetResponse').value)
+            };
+        }
+        
+        function calculateCosts(inputs) {
+            const network = networkData[selectedNetwork];
+            const product = productMultipliers[selectedProduct];
+            const { facilities, volume, density, orderValue } = inputs;
+            
+            // Inventory cost decreases with facilities (safety stock spread)
+            const inventoryCost = network.inventoryCostBase * product.inventory * (1 + 0.3 / facilities);
+            
+            // Transport cost decreases with more facilities (closer to customers)
+            const transportCost = network.transportCostBase * product.transport * (1.5 - density * 0.05) / Math.sqrt(facilities);
+            
+            // Facility cost increases with facilities
+            const facilityCost = network.facilityMultiplier * facilities * 50000 / volume / 365;
+            
+            // Handling cost
+            const handlingCost = 1.5 * product.handling * (selectedNetwork === 'crossdock' ? 0.5 : 1);
+            
+            // Response time
+            const responseTime = network.responseBase * (1 - facilities * 0.08) * (1 - density * 0.03);
+            
+            // Availability
+            const availability = network.availability + facilities * 0.5 - (10 - density) * 0.3;
+            
+            return {
+                inventory: Math.round(inventoryCost * 100) / 100,
+                transport: Math.round(transportCost * 100) / 100,
+                facility: Math.round(facilityCost * 100) / 100,
+                handling: Math.round(handlingCost * 100) / 100,
+                total: Math.round((inventoryCost + transportCost + facilityCost + handlingCost) * 100) / 100,
+                responseTime: Math.max(0.5, Math.round(responseTime * 10) / 10),
+                availability: Math.min(99, Math.round(availability))
+            };
+        }
+        
+        function updateDisplays() {
+            const inputs = getInputs();
+            document.getElementById('facilitiesValue').textContent = inputs.facilities;
+            document.getElementById('volumeValue').textContent = inputs.volume.toLocaleString();
+            document.getElementById('orderValueDisplay').textContent = '£' + inputs.orderValue;
+            document.getElementById('densityValue').textContent = inputs.density;
+            document.getElementById('responseValue').textContent = inputs.targetResponse;
+        }
+        
+        function updateFlowDiagram() {
+            const network = networkData[selectedNetwork];
+            const container = document.getElementById('flowDiagram');
+            
+            const nodeHTML = {
+                manufacturer: '<div class="flow-node manufacturer"><div class="icon">🏭</div><div class="label">Manufacturer</div></div>',
+                dc: '<div class="flow-node dc"><div class="icon">📦</div><div class="label">Distribution Centre</div></div>',
+                retail: '<div class="flow-node retail"><div class="icon">🏪</div><div class="label">Retail Store</div></div>',
+                customer: '<div class="flow-node customer"><div class="icon">🏠</div><div class="label">Customer</div></div>',
+                arrow: '<div class="flow-arrow">➡️</div>'
+            };
+            
+            container.innerHTML = network.diagram.map(item => nodeHTML[item]).join('');
+        }
+        
+        function updateMetrics(costs) {
+            const inputs = getInputs();
+            const network = networkData[selectedNetwork];
+            
+            document.getElementById('totalCost').textContent = '£' + costs.total.toFixed(2);
+            document.getElementById('responseTime').textContent = costs.responseTime + ' days';
+            document.getElementById('availability').textContent = costs.availability + '%';
+            document.getElementById('returnability').textContent = network.returnability;
+            
+            // Ratings
+            const costRating = costs.total < 10 ? 'rating-good' : costs.total < 15 ? 'rating-medium' : 'rating-poor';
+            const costLabel = costs.total < 10 ? 'Low' : costs.total < 15 ? 'Medium' : 'High';
+            document.getElementById('costRating').className = 'rating ' + costRating;
+            document.getElementById('costRating').textContent = costLabel;
+            
+            const timeRating = costs.responseTime <= inputs.targetResponse ? 'rating-good' : 'rating-poor';
+            const timeLabel = costs.responseTime <= inputs.targetResponse ? 'Meets Target' : 'Too Slow';
+            document.getElementById('timeRating').className = 'rating ' + timeRating;
+            document.getElementById('timeRating').textContent = timeLabel;
+            
+            const availRating = costs.availability >= 95 ? 'rating-good' : costs.availability >= 90 ? 'rating-medium' : 'rating-poor';
+            const availLabel = costs.availability >= 95 ? 'High' : costs.availability >= 90 ? 'Medium' : 'Low';
+            document.getElementById('availRating').className = 'rating ' + availRating;
+            document.getElementById('availRating').textContent = availLabel;
+        }
+        
+        function updateCharts(costs, inputs) {
+            // Cost breakdown
+            costBreakdown.data.datasets[0].data = [costs.inventory, costs.transport, costs.facility, costs.handling];
+            costBreakdown.update();
+            
+            // Trade-off chart
+            const facilityRange = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+            const inventoryData = facilityRange.map(f => {
+                const tempInputs = { ...inputs, facilities: f };
+                return calculateCosts(tempInputs).inventory * inputs.volume;
+            });
+            const transportData = facilityRange.map(f => {
+                const tempInputs = { ...inputs, facilities: f };
+                return calculateCosts(tempInputs).transport * inputs.volume;
+            });
+            const facilityData = facilityRange.map(f => {
+                const tempInputs = { ...inputs, facilities: f };
+                return calculateCosts(tempInputs).facility * inputs.volume;
+            });
+            const totalData = facilityRange.map((f, i) => inventoryData[i] + transportData[i] + facilityData[i]);
+            
+            tradeoffChart.data.labels = facilityRange;
+            tradeoffChart.data.datasets[0].data = inventoryData;
+            tradeoffChart.data.datasets[1].data = transportData;
+            tradeoffChart.data.datasets[2].data = facilityData;
+            tradeoffChart.data.datasets[3].data = totalData;
+            tradeoffChart.update();
+        }
+        
+        function updateComparisonTable() {
+            const inputs = getInputs();
+            const tbody = document.getElementById('comparisonBody');
+            
+            const scoreHTML = (value, thresholds) => {
+                if (value === 'Low' || value === 'Easy' || value <= thresholds[0]) return '<span class="score-dot high"></span>' + value;
+                if (value === 'Medium' || value <= thresholds[1]) return '<span class="score-dot medium"></span>' + value;
+                return '<span class="score-dot low"></span>' + value;
+            };
+            
+            tbody.innerHTML = Object.keys(networkData).map(key => {
+                const tempNetwork = selectedNetwork;
+                selectedNetwork = key;
+                const costs = calculateCosts(inputs);
+                selectedNetwork = tempNetwork;
+                
+                const network = networkData[key];
+                const isSelected = key === selectedNetwork;
+                
+                return `
+                    <tr class="${isSelected ? 'selected' : ''}">
+                        <td><strong>${network.name}</strong></td>
+                        <td>${scoreHTML(costs.inventory < 2 ? 'Low' : costs.inventory < 3 ? 'Medium' : 'High', [2, 3])}</td>
+                        <td>${scoreHTML(costs.transport < 4 ? 'Low' : costs.transport < 6 ? 'Medium' : 'High', [4, 6])}</td>
+                        <td>${scoreHTML(costs.responseTime, [2, 3])} days</td>
+                        <td>${scoreHTML(costs.availability, [95, 92])}%</td>
+                        <td style="font-size: 0.8em;">${network.bestFor}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+        
+        function updateInsights(costs, inputs) {
+            const network = networkData[selectedNetwork];
+            let insight = `<strong>${network.name}</strong> with ${inputs.facilities} facilities gives a total cost of £${costs.total.toFixed(2)} per order. `;
+            
+            if (costs.responseTime > inputs.targetResponse) {
+                insight += `⚠️ Response time (${costs.responseTime} days) exceeds your target (${inputs.targetResponse} days). Consider adding more facilities or switching to a faster network type. `;
+            } else {
+                insight += `✅ Response time meets your ${inputs.targetResponse}-day target. `;
+            }
+            
+            if (selectedProduct === 'perishable' && selectedNetwork === 'direct') {
+                insight += `💡 For perishables, consider Cross-docking or Milk Run delivery for faster transit and better freshness. `;
+            }
+            
+            if (selectedProduct === 'bulky' && selectedNetwork !== 'retail') {
+                insight += `💡 For bulky items, Retail Pickup (click & collect) can significantly reduce last-mile delivery costs. `;
+            }
+            
+            if (inputs.density > 7 && selectedNetwork !== 'milkrun') {
+                insight += `💡 With high customer density, Milk Run delivery could reduce transport costs through route optimisation. `;
+            }
+            
+            document.getElementById('insightText').innerHTML = insight;
+        }
+        
+        function updateAll() {
+            updateDisplays();
+            const inputs = getInputs();
+            const costs = calculateCosts(inputs);
+            
+            updateFlowDiagram();
+            updateMetrics(costs);
+            updateCharts(costs, inputs);
+            updateComparisonTable();
+            updateInsights(costs, inputs);
+        }
+        
+        function initCharts() {
+            costBreakdown = new Chart(document.getElementById('costBreakdown'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['Inventory', 'Transport', 'Facility', 'Handling'],
+                    datasets: [{
+                        data: [2, 5, 3, 1.5],
+                        backgroundColor: ['#3498db', '#e67e22', '#9b59b6', '#27ae60']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { font: { size: 10 } } },
+                        tooltip: {
+                            callbacks: {
+                                label: ctx => `${ctx.label}: £${ctx.raw.toFixed(2)}`
+                            }
+                        }
+                    }
+                }
+            });
+            
+            tradeoffChart = new Chart(document.getElementById('tradeoffChart'), {
+                type: 'line',
+                data: {
+                    labels: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+                    datasets: [
+                        { label: 'Inventory', data: [], borderColor: '#3498db', fill: false, tension: 0.3 },
+                        { label: 'Transport', data: [], borderColor: '#e67e22', fill: false, tension: 0.3 },
+                        { label: 'Facility', data: [], borderColor: '#9b59b6', fill: false, tension: 0.3 },
+                        { label: 'Total', data: [], borderColor: '#2c3e50', borderWidth: 3, fill: false, tension: 0.3 }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom', labels: { font: { size: 9 } } } },
+                    scales: {
+                        x: { title: { display: true, text: 'Number of Facilities' } },
+                        y: { title: { display: true, text: 'Daily Cost (£)' }, beginAtZero: true }
+                    }
+                }
+            });
+        }
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            initCharts();
+            
+            const sliders = ['numFacilities', 'orderVolume', 'orderValue', 'customerDensity', 'targetResponse'];
+            sliders.forEach(id => {
+                document.getElementById(id).addEventListener('input', updateAll);
+            });
+            
+            updateAll();
+        });
+    </script>
+</body>
+</html>

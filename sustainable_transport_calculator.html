@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌱 Sustainable Transport Calculator | Triple Bottom Line Analysis</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c2f 0%, #2d5a3f 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container { max-width: 1500px; margin: 0 auto; }
+        
+        h1 {
+            text-align: center;
+            color: white;
+            margin-bottom: 8px;
+            font-size: 1.9em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: rgba(255,255,255,0.9);
+            margin-bottom: 20px;
+            font-size: 0.95em;
+        }
+        
+        .theory-banner {
+            background: rgba(255,255,255,0.95);
+            border-radius: 12px;
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            border-left: 5px solid #27ae60;
+        }
+        
+        .theory-banner h3 { color: #1e3c2f; margin-bottom: 10px; font-size: 1em; }
+        .theory-banner p { color: #555; font-size: 0.88em; line-height: 1.5; }
+        
+        .tbl-visual {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .tbl-pillar {
+            text-align: center;
+            padding: 15px 25px;
+            border-radius: 10px;
+            min-width: 150px;
+        }
+        
+        .tbl-pillar.economic { background: linear-gradient(135deg, #f39c12, #e67e22); color: white; }
+        .tbl-pillar.social { background: linear-gradient(135deg, #3498db, #2980b9); color: white; }
+        .tbl-pillar.environmental { background: linear-gradient(135deg, #27ae60, #1e8449); color: white; }
+        
+        .tbl-pillar .icon { font-size: 2em; }
+        .tbl-pillar .name { font-weight: bold; margin-top: 5px; }
+        
+        .main-grid {
+            display: grid;
+            grid-template-columns: 400px 1fr;
+            gap: 20px;
+        }
+        
+        @media (max-width: 1100px) { .main-grid { grid-template-columns: 1fr; } }
+        
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 18px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+            margin-bottom: 15px;
+        }
+        
+        .card h2 {
+            color: #1e3c2f;
+            font-size: 1em;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #27ae60;
+        }
+        
+        .scenario-selector {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .scenario-btn {
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+            background: white;
+        }
+        
+        .scenario-btn:hover { border-color: #27ae60; background: #f0fff4; }
+        .scenario-btn.selected { border-color: #27ae60; background: #d5f5e3; }
+        .scenario-btn .icon { font-size: 1.5em; }
+        .scenario-btn .name { font-size: 0.85em; margin-top: 5px; font-weight: 600; }
+        
+        .slider-group { margin-bottom: 18px; }
+        
+        .slider-group label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85em;
+            color: #555;
+            margin-bottom: 8px;
+        }
+        
+        .slider-group .value {
+            font-weight: bold;
+            color: #1e3c2f;
+            background: #d5f5e3;
+            padding: 2px 10px;
+            border-radius: 10px;
+        }
+        
+        .slider-group input[type="range"] {
+            width: 100%;
+            height: 8px;
+            border-radius: 4px;
+            -webkit-appearance: none;
+            background: linear-gradient(to right, #c8e6c9, #27ae60);
+        }
+        
+        .slider-group input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #1e3c2f;
+            cursor: pointer;
+        }
+        
+        .mode-mix { margin-top: 15px; }
+        
+        .mode-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .mode-row .icon { font-size: 1.3em; width: 30px; }
+        .mode-row .name { flex: 1; font-size: 0.85em; }
+        .mode-row input { width: 80px; }
+        .mode-row .percent { font-weight: bold; color: #1e3c2f; width: 40px; }
+        
+        .results-area { display: flex; flex-direction: column; gap: 15px; }
+        
+        .tbl-scores {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+        
+        .score-card {
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            color: white;
+        }
+        
+        .score-card.economic { background: linear-gradient(135deg, #f39c12, #d68910); }
+        .score-card.social { background: linear-gradient(135deg, #3498db, #2471a3); }
+        .score-card.environmental { background: linear-gradient(135deg, #27ae60, #1e8449); }
+        
+        .score-card .icon { font-size: 2em; }
+        .score-card .title { font-size: 0.9em; margin: 8px 0; opacity: 0.9; }
+        .score-card .score { font-size: 2.5em; font-weight: bold; }
+        .score-card .max { font-size: 0.8em; opacity: 0.7; }
+        
+        .pollution-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+        }
+        
+        @media (max-width: 900px) { .pollution-grid { grid-template-columns: repeat(2, 1fr); } }
+        
+        .pollution-card {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            border: 2px solid #eee;
+        }
+        
+        .pollution-card .icon { font-size: 2em; }
+        .pollution-card .name { font-size: 0.85em; color: #666; margin: 8px 0; }
+        .pollution-card .value { font-size: 1.4em; font-weight: bold; }
+        .pollution-card .unit { font-size: 0.75em; color: #888; }
+        
+        .pollution-card.good { border-color: #27ae60; }
+        .pollution-card.good .value { color: #27ae60; }
+        .pollution-card.medium { border-color: #f39c12; }
+        .pollution-card.medium .value { color: #f39c12; }
+        .pollution-card.poor { border-color: #e74c3c; }
+        .pollution-card.poor .value { color: #e74c3c; }
+        
+        .charts-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        @media (max-width: 900px) { .charts-row { grid-template-columns: 1fr; } }
+        
+        .chart-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+        }
+        
+        .chart-card h3 { color: #1e3c2f; font-size: 0.95em; margin-bottom: 15px; text-align: center; }
+        .chart-wrapper { height: 250px; }
+        
+        .policy-box {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+        }
+        
+        .policy-box h3 { color: #1e3c2f; margin-bottom: 15px; }
+        
+        .policy-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+        
+        .policy-item {
+            padding: 15px;
+            border-radius: 10px;
+            background: #f8f9fa;
+            border-left: 4px solid #27ae60;
+        }
+        
+        .policy-item h4 { color: #1e3c2f; font-size: 0.9em; margin-bottom: 8px; }
+        .policy-item p { font-size: 0.8em; color: #666; line-height: 1.4; }
+        .policy-item .impact { font-size: 0.75em; color: #27ae60; margin-top: 8px; font-weight: 600; }
+        
+        .insight-box {
+            background: linear-gradient(135deg, #1e3c2f, #2d5a3f);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+        }
+        
+        .insight-box h3 { color: #f39c12; margin-bottom: 12px; }
+        .insight-box p { font-size: 0.9em; line-height: 1.6; margin-bottom: 10px; }
+        
+        footer {
+            text-align: center;
+            padding: 20px;
+            margin-top: 30px;
+            color: rgba(255,255,255,0.8);
+            font-size: 0.85em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="index.html" style="display: inline-flex; align-items: center; gap: 8px; color: white; text-decoration: none; background: rgba(255,255,255,0.15); padding: 10px 20px; border-radius: 25px; font-size: 0.9em; margin-bottom: 15px; transition: background 0.2s;">
+            <span>←</span> <span>Return to Home Page</span>
+        </a>
+        <h1>🌱 Sustainable Transport Calculator</h1>
+        <p class="subtitle">Analyse your transport choices using the Triple Bottom Line framework | Measure economic, social, and environmental impacts</p>
+        
+        <div class="theory-banner">
+            <h3>📚 Key Theory: The Triple Bottom Line (TBL)</h3>
+            <p>Sustainable transport balances three pillars: <strong>Economic</strong> (affordability, efficiency, supporting growth), <strong>Social</strong> (accessibility, equity, safety, health), and <strong>Environmental</strong> (emissions, resource use, pollution). A truly sustainable system must perform well across all three dimensions.</p>
+            <div class="tbl-visual">
+                <div class="tbl-pillar economic">
+                    <div class="icon">💰</div>
+                    <div class="name">Economic</div>
+                </div>
+                <div class="tbl-pillar social">
+                    <div class="icon">👥</div>
+                    <div class="name">Social</div>
+                </div>
+                <div class="tbl-pillar environmental">
+                    <div class="icon">🌍</div>
+                    <div class="name">Environmental</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="main-grid">
+            <div class="controls">
+                <div class="card">
+                    <h2>🏙️ Select City Profile</h2>
+                    <div class="scenario-selector">
+                        <div class="scenario-btn selected" data-scenario="uk-average" onclick="selectScenario(this)">
+                            <div class="icon">🇬🇧</div>
+                            <div class="name">UK Average</div>
+                        </div>
+                        <div class="scenario-btn" data-scenario="london" onclick="selectScenario(this)">
+                            <div class="icon">🏙️</div>
+                            <div class="name">London</div>
+                        </div>
+                        <div class="scenario-btn" data-scenario="copenhagen" onclick="selectScenario(this)">
+                            <div class="icon">🚴</div>
+                            <div class="name">Copenhagen</div>
+                        </div>
+                        <div class="scenario-btn" data-scenario="oslo" onclick="selectScenario(this)">
+                            <div class="icon">🔋</div>
+                            <div class="name">Oslo (EV)</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h2>🚗 Transport Mode Mix (%)</h2>
+                    <div class="mode-mix">
+                        <div class="mode-row">
+                            <span class="icon">🚗</span>
+                            <span class="name">Private Car (petrol/diesel)</span>
+                            <input type="range" id="carShare" min="0" max="100" value="60">
+                            <span class="percent" id="carShareVal">60%</span>
+                        </div>
+                        <div class="mode-row">
+                            <span class="icon">🔋</span>
+                            <span class="name">Electric Vehicle</span>
+                            <input type="range" id="evShare" min="0" max="100" value="5">
+                            <span class="percent" id="evShareVal">5%</span>
+                        </div>
+                        <div class="mode-row">
+                            <span class="icon">🚌</span>
+                            <span class="name">Bus / Public Transit</span>
+                            <input type="range" id="busShare" min="0" max="100" value="10">
+                            <span class="percent" id="busShareVal">10%</span>
+                        </div>
+                        <div class="mode-row">
+                            <span class="icon">🚆</span>
+                            <span class="name">Rail / Metro</span>
+                            <input type="range" id="railShare" min="0" max="100" value="8">
+                            <span class="percent" id="railShareVal">8%</span>
+                        </div>
+                        <div class="mode-row">
+                            <span class="icon">🚴</span>
+                            <span class="name">Cycling</span>
+                            <input type="range" id="cycleShare" min="0" max="100" value="3">
+                            <span class="percent" id="cycleShareVal">3%</span>
+                        </div>
+                        <div class="mode-row">
+                            <span class="icon">🚶</span>
+                            <span class="name">Walking</span>
+                            <input type="range" id="walkShare" min="0" max="100" value="14">
+                            <span class="percent" id="walkShareVal">14%</span>
+                        </div>
+                    </div>
+                    <p style="font-size: 0.8em; color: #888; margin-top: 10px; text-align: center;">
+                        Total: <strong id="totalShare">100%</strong>
+                    </p>
+                </div>
+                
+                <div class="card">
+                    <h2>⚙️ City Parameters</h2>
+                    
+                    <div class="slider-group">
+                        <label>
+                            <span>Average Journey Distance</span>
+                            <span class="value" id="distanceValue">10 km</span>
+                        </label>
+                        <input type="range" id="avgDistance" min="2" max="30" value="10" step="1">
+                    </div>
+                    
+                    <div class="slider-group">
+                        <label>
+                            <span>Daily Journeys (000s)</span>
+                            <span class="value" id="journeysValue">500</span>
+                        </label>
+                        <input type="range" id="dailyJourneys" min="50" max="2000" value="500" step="50">
+                    </div>
+                    
+                    <div class="slider-group">
+                        <label>
+                            <span>Congestion Level (1-10)</span>
+                            <span class="value" id="congestionValue">6</span>
+                        </label>
+                        <input type="range" id="congestion" min="1" max="10" value="6" step="1">
+                    </div>
+                    
+                    <div class="slider-group">
+                        <label>
+                            <span>Green Energy in Grid (%)</span>
+                            <span class="value" id="greenEnergyValue">40%</span>
+                        </label>
+                        <input type="range" id="greenEnergy" min="0" max="100" value="40" step="5">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="results-area">
+                <div class="tbl-scores">
+                    <div class="score-card economic">
+                        <div class="icon">💰</div>
+                        <div class="title">Economic Score</div>
+                        <div class="score" id="economicScore">65</div>
+                        <div class="max">/ 100</div>
+                    </div>
+                    <div class="score-card social">
+                        <div class="icon">👥</div>
+                        <div class="title">Social Score</div>
+                        <div class="score" id="socialScore">58</div>
+                        <div class="max">/ 100</div>
+                    </div>
+                    <div class="score-card environmental">
+                        <div class="icon">🌍</div>
+                        <div class="title">Environmental Score</div>
+                        <div class="score" id="environmentalScore">45</div>
+                        <div class="max">/ 100</div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h2>🏭 Pollution Impacts (Daily)</h2>
+                    <div class="pollution-grid">
+                        <div class="pollution-card" id="airPollution">
+                            <div class="icon">💨</div>
+                            <div class="name">Air Pollution (CO₂)</div>
+                            <div class="value">1,250</div>
+                            <div class="unit">tonnes/day</div>
+                        </div>
+                        <div class="pollution-card" id="noisePollution">
+                            <div class="icon">🔊</div>
+                            <div class="name">Noise Level</div>
+                            <div class="value">62</div>
+                            <div class="unit">dB(A) average</div>
+                        </div>
+                        <div class="pollution-card" id="timePollution">
+                            <div class="icon">⏱️</div>
+                            <div class="name">Time Lost (Congestion)</div>
+                            <div class="value">45</div>
+                            <div class="unit">min/person/day</div>
+                        </div>
+                        <div class="pollution-card" id="spacePollution">
+                            <div class="icon">📐</div>
+                            <div class="name">Space per Person</div>
+                            <div class="value">85</div>
+                            <div class="unit">m² road space</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="charts-row">
+                    <div class="chart-card">
+                        <h3>📊 Triple Bottom Line Radar</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="tblRadar"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-card">
+                        <h3>🏭 Emissions by Mode</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="emissionsChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="policy-box">
+                    <h3>📋 UK Policy Alignment</h3>
+                    <div class="policy-grid" id="policyGrid">
+                        <div class="policy-item">
+                            <h4>🚗 Petrol/Diesel Ban 2030</h4>
+                            <p>UK targets ban on new petrol/diesel car sales by 2030, all zero-emission by 2035</p>
+                            <div class="impact">Your EV share: 5% → Target needs significant increase</div>
+                        </div>
+                        <div class="policy-item">
+                            <h4>🏙️ ULEZ Compliance</h4>
+                            <p>London's Ultra Low Emission Zone requires vehicles to meet strict emissions standards</p>
+                            <div class="impact">Current mix would face £12.50/day charges for 40% of vehicles</div>
+                        </div>
+                        <div class="policy-item">
+                            <h4>🚛 HGV Phase-out 2040</h4>
+                            <p>Non-zero-emission heavy goods vehicles to be phased out by 2040</p>
+                            <div class="impact">Freight decarbonisation on track</div>
+                        </div>
+                        <div class="policy-item">
+                            <h4>🌍 Net Zero 2050</h4>
+                            <p>UK committed to net zero greenhouse gas emissions by 2050</p>
+                            <div class="impact">Transport accounts for 27% of UK emissions</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="insight-box">
+                    <h3>💡 Sustainability Insights</h3>
+                    <p id="insightText">
+                        Your current transport mix has a moderate environmental impact. With 60% car usage and only 5% EV adoption, 
+                        CO₂ emissions are higher than sustainable targets. Consider policies to increase public transport usage 
+                        and active travel (cycling/walking) to improve all three pillars of sustainability.
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p style="background: rgba(255,193,7,0.2); border: 1px solid rgba(255,193,7,0.4); border-radius: 8px; padding: 12px 15px; margin-bottom: 15px; font-size: 0.8em; color: #333;">
+                ⚠️ <strong>Note:</strong> This simulation is for educational demonstration purposes only. Results may differ significantly from real-world outcomes. It illustrates theoretical concepts based on the parameters you configure.
+            </p>
+            <p>© 2025 Dr Mohit Kumar Singh. All rights reserved.</p>
+            <p style="margin-top: 5px; font-size: 0.8em; opacity: 0.7;">TRAN1060: Passenger and Freight Transport | For educational purposes only.</p>
+        </footer>
+    </div>
+
+    <script>
+        let tblRadar, emissionsChart;
+        
+        const scenarios = {
+            'uk-average': { car: 60, ev: 5, bus: 10, rail: 8, cycle: 3, walk: 14, distance: 10, journeys: 500, congestion: 6, greenEnergy: 40 },
+            'london': { car: 35, ev: 8, bus: 15, rail: 25, cycle: 5, walk: 12, distance: 8, journeys: 1500, congestion: 8, greenEnergy: 45 },
+            'copenhagen': { car: 20, ev: 10, bus: 12, rail: 15, cycle: 35, walk: 8, distance: 6, journeys: 300, congestion: 3, greenEnergy: 65 },
+            'oslo': { car: 25, ev: 35, bus: 15, rail: 12, cycle: 8, walk: 5, distance: 9, journeys: 250, congestion: 4, greenEnergy: 98 }
+        };
+        
+        const modeData = {
+            car: { co2: 120, noise: 72, space: 120, cost: 0.45, health: 20, accessibility: 70 },
+            ev: { co2: 0, noise: 55, space: 120, cost: 0.15, health: 25, accessibility: 70 },
+            bus: { co2: 30, noise: 68, space: 8, cost: 0.10, health: 40, accessibility: 85 },
+            rail: { co2: 15, noise: 65, space: 3, cost: 0.12, health: 45, accessibility: 80 },
+            cycle: { co2: 0, noise: 30, space: 5, cost: 0.02, health: 95, accessibility: 60 },
+            walk: { co2: 0, noise: 30, space: 1, cost: 0, health: 100, accessibility: 50 }
+        };
+        
+        function selectScenario(element) {
+            document.querySelectorAll('.scenario-btn').forEach(btn => btn.classList.remove('selected'));
+            element.classList.add('selected');
+            
+            const scenario = scenarios[element.dataset.scenario];
+            document.getElementById('carShare').value = scenario.car;
+            document.getElementById('evShare').value = scenario.ev;
+            document.getElementById('busShare').value = scenario.bus;
+            document.getElementById('railShare').value = scenario.rail;
+            document.getElementById('cycleShare').value = scenario.cycle;
+            document.getElementById('walkShare').value = scenario.walk;
+            document.getElementById('avgDistance').value = scenario.distance;
+            document.getElementById('dailyJourneys').value = scenario.journeys;
+            document.getElementById('congestion').value = scenario.congestion;
+            document.getElementById('greenEnergy').value = scenario.greenEnergy;
+            
+            updateAll();
+        }
+        
+        function getInputs() {
+            return {
+                car: parseFloat(document.getElementById('carShare').value),
+                ev: parseFloat(document.getElementById('evShare').value),
+                bus: parseFloat(document.getElementById('busShare').value),
+                rail: parseFloat(document.getElementById('railShare').value),
+                cycle: parseFloat(document.getElementById('cycleShare').value),
+                walk: parseFloat(document.getElementById('walkShare').value),
+                distance: parseFloat(document.getElementById('avgDistance').value),
+                journeys: parseFloat(document.getElementById('dailyJourneys').value),
+                congestion: parseFloat(document.getElementById('congestion').value),
+                greenEnergy: parseFloat(document.getElementById('greenEnergy').value)
+            };
+        }
+        
+        function calculateScores(inputs) {
+            const { car, ev, bus, rail, cycle, walk, distance, journeys, congestion, greenEnergy } = inputs;
+            const total = car + ev + bus + rail + cycle + walk;
+            
+            // Normalise shares
+            const shares = {
+                car: car / total,
+                ev: ev / total,
+                bus: bus / total,
+                rail: rail / total,
+                cycle: cycle / total,
+                walk: walk / total
+            };
+            
+            // Economic Score (cost efficiency, productivity)
+            let avgCost = 0;
+            Object.keys(shares).forEach(mode => {
+                avgCost += shares[mode] * modeData[mode].cost * distance;
+            });
+            const timeLost = congestion * 5; // minutes
+            const productivityLoss = timeLost * journeys * 0.5 / 60; // hours * value
+            const economicScore = Math.max(0, Math.min(100, 100 - avgCost * 10 - congestion * 3));
+            
+            // Social Score (accessibility, health, equity)
+            let healthScore = 0;
+            let accessScore = 0;
+            Object.keys(shares).forEach(mode => {
+                healthScore += shares[mode] * modeData[mode].health;
+                accessScore += shares[mode] * modeData[mode].accessibility;
+            });
+            const socialScore = Math.round((healthScore * 0.5 + accessScore * 0.5) * (1 - congestion * 0.02));
+            
+            // Environmental Score (emissions, noise, space)
+            let co2 = 0;
+            Object.keys(shares).forEach(mode => {
+                let modeCO2 = modeData[mode].co2;
+                if (mode === 'ev') modeCO2 = 50 * (1 - greenEnergy / 100); // EV emissions depend on grid
+                co2 += shares[mode] * modeCO2;
+            });
+            const envScore = Math.max(0, Math.min(100, 100 - co2 * 0.5 - congestion * 2));
+            
+            return {
+                economic: Math.round(economicScore),
+                social: Math.round(socialScore),
+                environmental: Math.round(envScore),
+                co2: co2 * distance * journeys / 1000, // tonnes
+                shares
+            };
+        }
+        
+        function calculatePollution(inputs, shares) {
+            const { distance, journeys, congestion, greenEnergy } = inputs;
+            
+            // Air pollution (CO2 tonnes/day)
+            let co2 = 0;
+            Object.keys(shares).forEach(mode => {
+                let modeCO2 = modeData[mode].co2;
+                if (mode === 'ev') modeCO2 = 50 * (1 - greenEnergy / 100);
+                co2 += shares[mode] * modeCO2 * distance * journeys / 1000000;
+            });
+            
+            // Noise (weighted average dB)
+            let noise = 0;
+            Object.keys(shares).forEach(mode => {
+                noise += shares[mode] * modeData[mode].noise;
+            });
+            noise += congestion * 2; // Congestion adds noise
+            
+            // Time pollution (minutes lost per person)
+            const timeLost = congestion * 8;
+            
+            // Space pollution (m² per person)
+            let space = 0;
+            Object.keys(shares).forEach(mode => {
+                space += shares[mode] * modeData[mode].space;
+            });
+            
+            return {
+                co2: Math.round(co2 * 100) / 100,
+                noise: Math.round(noise),
+                time: Math.round(timeLost),
+                space: Math.round(space)
+            };
+        }
+        
+        function updateDisplays() {
+            const inputs = getInputs();
+            const total = inputs.car + inputs.ev + inputs.bus + inputs.rail + inputs.cycle + inputs.walk;
+            
+            document.getElementById('carShareVal').textContent = inputs.car + '%';
+            document.getElementById('evShareVal').textContent = inputs.ev + '%';
+            document.getElementById('busShareVal').textContent = inputs.bus + '%';
+            document.getElementById('railShareVal').textContent = inputs.rail + '%';
+            document.getElementById('cycleShareVal').textContent = inputs.cycle + '%';
+            document.getElementById('walkShareVal').textContent = inputs.walk + '%';
+            document.getElementById('totalShare').textContent = total + '%';
+            document.getElementById('totalShare').style.color = total === 100 ? '#27ae60' : '#e74c3c';
+            
+            document.getElementById('distanceValue').textContent = inputs.distance + ' km';
+            document.getElementById('journeysValue').textContent = inputs.journeys.toLocaleString();
+            document.getElementById('congestionValue').textContent = inputs.congestion;
+            document.getElementById('greenEnergyValue').textContent = inputs.greenEnergy + '%';
+        }
+        
+        function updateScores(scores) {
+            document.getElementById('economicScore').textContent = scores.economic;
+            document.getElementById('socialScore').textContent = scores.social;
+            document.getElementById('environmentalScore').textContent = scores.environmental;
+        }
+        
+        function updatePollutionCards(pollution) {
+            const airCard = document.getElementById('airPollution');
+            airCard.querySelector('.value').textContent = pollution.co2.toLocaleString();
+            airCard.className = 'pollution-card ' + (pollution.co2 < 500 ? 'good' : pollution.co2 < 1000 ? 'medium' : 'poor');
+            
+            const noiseCard = document.getElementById('noisePollution');
+            noiseCard.querySelector('.value').textContent = pollution.noise;
+            noiseCard.className = 'pollution-card ' + (pollution.noise < 55 ? 'good' : pollution.noise < 65 ? 'medium' : 'poor');
+            
+            const timeCard = document.getElementById('timePollution');
+            timeCard.querySelector('.value').textContent = pollution.time;
+            timeCard.className = 'pollution-card ' + (pollution.time < 20 ? 'good' : pollution.time < 40 ? 'medium' : 'poor');
+            
+            const spaceCard = document.getElementById('spacePollution');
+            spaceCard.querySelector('.value').textContent = pollution.space;
+            spaceCard.className = 'pollution-card ' + (pollution.space < 30 ? 'good' : pollution.space < 60 ? 'medium' : 'poor');
+        }
+        
+        function updateCharts(scores, inputs) {
+            // TBL Radar
+            tblRadar.data.datasets[0].data = [scores.economic, scores.social, scores.environmental];
+            tblRadar.update();
+            
+            // Emissions by mode
+            const shares = scores.shares;
+            const emissionsByMode = Object.keys(shares).map(mode => {
+                let modeCO2 = modeData[mode].co2;
+                if (mode === 'ev') modeCO2 = 50 * (1 - inputs.greenEnergy / 100);
+                return shares[mode] * modeCO2 * inputs.distance * inputs.journeys / 1000;
+            });
+            
+            emissionsChart.data.datasets[0].data = emissionsByMode;
+            emissionsChart.update();
+        }
+        
+        function updateInsights(scores, inputs) {
+            let insight = '';
+            
+            if (scores.environmental < 50) {
+                insight += `<strong>Environmental concern:</strong> Your transport mix generates significant CO₂ emissions. `;
+                insight += `With ${inputs.car}% petrol/diesel cars, consider increasing EV adoption and public transport use. `;
+            } else if (scores.environmental > 70) {
+                insight += `<strong>Strong environmental performance:</strong> Your low-emission transport mix is well-aligned with sustainability goals. `;
+            }
+            
+            if (inputs.cycle + inputs.walk < 20) {
+                insight += `<strong>Active travel opportunity:</strong> Only ${inputs.cycle + inputs.walk}% active travel. Copenhagen achieves 43% - consider cycling infrastructure investment. `;
+            }
+            
+            if (inputs.congestion > 6) {
+                insight += `<strong>Congestion impact:</strong> High congestion (${inputs.congestion}/10) causes time pollution of ~${inputs.congestion * 8} minutes per journey. Smart traffic management could help. `;
+            }
+            
+            if (inputs.ev < 20 && inputs.greenEnergy > 50) {
+                insight += `<strong>EV opportunity:</strong> With ${inputs.greenEnergy}% green grid energy, increasing EV share would significantly reduce transport emissions. `;
+            }
+            
+            document.getElementById('insightText').innerHTML = insight || 'Your transport mix shows a reasonable balance across the Triple Bottom Line dimensions.';
+        }
+        
+        function updatePolicyAlignment(inputs) {
+            const policies = document.querySelectorAll('.policy-item .impact');
+            
+            policies[0].textContent = `Your EV share: ${inputs.ev}% → ${inputs.ev < 20 ? 'Needs significant increase to meet 2030 targets' : 'On track for transition'}`;
+            policies[1].textContent = `Current mix: ${inputs.car > 30 ? `${inputs.car}% petrol/diesel cars would face daily charges` : 'Good ULEZ compliance'}`;
+            policies[2].textContent = `Freight sector alignment: ${inputs.greenEnergy > 50 ? 'Green energy supports HGV electrification' : 'Grid needs more renewables'}`;
+            policies[3].textContent = `Transport emissions: ${inputs.car + inputs.ev < 40 ? 'Low car dependency supports Net Zero' : 'High car use challenges Net Zero targets'}`;
+        }
+        
+        function updateAll() {
+            updateDisplays();
+            const inputs = getInputs();
+            const scores = calculateScores(inputs);
+            const pollution = calculatePollution(inputs, scores.shares);
+            
+            updateScores(scores);
+            updatePollutionCards(pollution);
+            updateCharts(scores, inputs);
+            updateInsights(scores, inputs);
+            updatePolicyAlignment(inputs);
+        }
+        
+        function initCharts() {
+            tblRadar = new Chart(document.getElementById('tblRadar'), {
+                type: 'radar',
+                data: {
+                    labels: ['Economic', 'Social', 'Environmental'],
+                    datasets: [{
+                        label: 'TBL Score',
+                        data: [65, 58, 45],
+                        backgroundColor: 'rgba(39, 174, 96, 0.3)',
+                        borderColor: '#27ae60',
+                        borderWidth: 3,
+                        pointBackgroundColor: '#27ae60'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { r: { beginAtZero: true, max: 100 } },
+                    plugins: { legend: { display: false } }
+                }
+            });
+            
+            emissionsChart = new Chart(document.getElementById('emissionsChart'), {
+                type: 'bar',
+                data: {
+                    labels: ['Car', 'EV', 'Bus', 'Rail', 'Cycle', 'Walk'],
+                    datasets: [{
+                        label: 'CO₂ (tonnes)',
+                        data: [100, 5, 20, 10, 0, 0],
+                        backgroundColor: ['#e74c3c', '#27ae60', '#3498db', '#9b59b6', '#f39c12', '#1abc9c']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true, title: { display: true, text: 'CO₂ tonnes/day' } } }
+                }
+            });
+        }
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            initCharts();
+            
+            const sliders = ['carShare', 'evShare', 'busShare', 'railShare', 'cycleShare', 'walkShare', 
+                           'avgDistance', 'dailyJourneys', 'congestion', 'greenEnergy'];
+            sliders.forEach(id => {
+                document.getElementById(id).addEventListener('input', updateAll);
+            });
+            
+            updateAll();
+        });
+    </script>
+</body>
+</html>

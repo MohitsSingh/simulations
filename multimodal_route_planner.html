@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚢 Multimodal Route Planner | Transport & Logistics</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0c3547 0%, #1a6b8a 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container { max-width: 1600px; margin: 0 auto; }
+        
+        h1 {
+            text-align: center;
+            color: white;
+            margin-bottom: 8px;
+            font-size: 1.9em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: rgba(255,255,255,0.9);
+            margin-bottom: 20px;
+            font-size: 0.95em;
+        }
+        
+        .theory-banner {
+            background: rgba(255,255,255,0.95);
+            border-radius: 12px;
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            border-left: 5px solid #e67e22;
+        }
+        
+        .theory-banner h3 { color: #0c3547; margin-bottom: 8px; font-size: 1em; }
+        .theory-banner p { color: #555; font-size: 0.88em; line-height: 1.5; }
+        
+        .theory-banner .definitions {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 12px;
+        }
+        
+        @media (max-width: 800px) {
+            .theory-banner .definitions { grid-template-columns: 1fr; }
+        }
+        
+        .theory-banner .def-box {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 8px;
+            border-left: 3px solid #3498db;
+        }
+        
+        .theory-banner .def-box strong { color: #0c3547; }
+        
+        .main-grid {
+            display: grid;
+            grid-template-columns: 420px 1fr;
+            gap: 20px;
+        }
+        
+        @media (max-width: 1200px) { .main-grid { grid-template-columns: 1fr; } }
+        
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 18px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+            margin-bottom: 15px;
+        }
+        
+        .card h2 {
+            color: #0c3547;
+            font-size: 1em;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #3498db;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .form-group { margin-bottom: 15px; }
+        
+        .form-group label {
+            display: block;
+            font-size: 0.85em;
+            color: #555;
+            margin-bottom: 6px;
+            font-weight: 600;
+        }
+        
+        .form-group select, .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 0.9em;
+        }
+        
+        .form-group select:focus, .form-group input:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        
+        .cargo-types {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+        
+        .cargo-type {
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+            font-size: 0.85em;
+        }
+        
+        .cargo-type:hover { border-color: #3498db; background: #f8f9fa; }
+        .cargo-type.selected { border-color: #27ae60; background: #d5f5e3; }
+        .cargo-type .icon { font-size: 1.5em; margin-bottom: 5px; }
+        
+        .priority-slider {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .priority-slider input[type="range"] {
+            flex: 1;
+            height: 8px;
+            border-radius: 4px;
+            -webkit-appearance: none;
+        }
+        
+        .priority-slider input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #0c3547;
+            cursor: pointer;
+        }
+        
+        .priority-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75em;
+            color: #888;
+            margin-top: 5px;
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1em;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(39,174,96,0.4);
+        }
+        
+        .results-area { display: flex; flex-direction: column; gap: 15px; }
+        
+        .route-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            border-left: 5px solid #3498db;
+        }
+        
+        .route-card.recommended { border-left-color: #27ae60; }
+        .route-card.alternative { border-left-color: #f39c12; }
+        
+        .route-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .route-header h3 { color: #0c3547; font-size: 1.1em; }
+        
+        .route-badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+        
+        .badge-recommended { background: #d5f5e3; color: #27ae60; }
+        .badge-fastest { background: #ffeaa7; color: #d68910; }
+        .badge-cheapest { background: #d6eaf8; color: #2874a6; }
+        .badge-greenest { background: #d5f5e3; color: #1e8449; }
+        
+        .route-journey {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .journey-node {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 8px;
+        }
+        
+        .journey-node .icon { font-size: 1.5em; }
+        .journey-node .label { font-size: 0.7em; color: #666; margin-top: 3px; }
+        
+        .journey-leg {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 5px 10px;
+            color: #888;
+        }
+        
+        .journey-leg .mode { font-size: 1.2em; }
+        .journey-leg .details { font-size: 0.65em; text-align: center; }
+        
+        .route-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+        
+        .stat-box {
+            text-align: center;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .stat-box .value { font-size: 1.3em; font-weight: bold; color: #0c3547; }
+        .stat-box .label { font-size: 0.75em; color: #666; margin-top: 3px; }
+        
+        .stat-box.highlight-green .value { color: #27ae60; }
+        .stat-box.highlight-orange .value { color: #e67e22; }
+        .stat-box.highlight-red .value { color: #e74c3c; }
+        
+        .charts-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        @media (max-width: 900px) { .charts-row { grid-template-columns: 1fr; } }
+        
+        .chart-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+        }
+        
+        .chart-card h3 { color: #0c3547; font-size: 0.95em; margin-bottom: 15px; text-align: center; }
+        .chart-wrapper { height: 250px; }
+        
+        .swot-analysis {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+        }
+        
+        .swot-analysis h3 { color: #0c3547; margin-bottom: 15px; }
+        
+        .swot-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+        
+        .swot-box {
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 0.85em;
+        }
+        
+        .swot-box h4 { margin-bottom: 8px; font-size: 0.9em; }
+        .swot-box ul { margin-left: 15px; }
+        .swot-box li { margin-bottom: 4px; }
+        
+        .swot-strengths { background: #d5f5e3; }
+        .swot-strengths h4 { color: #1e8449; }
+        
+        .swot-weaknesses { background: #fadbd8; }
+        .swot-weaknesses h4 { color: #c0392b; }
+        
+        .swot-opportunities { background: #d6eaf8; }
+        .swot-opportunities h4 { color: #2874a6; }
+        
+        .swot-threats { background: #fef9e7; }
+        .swot-threats h4 { color: #b7950b; }
+        
+        .trade-off-box {
+            background: linear-gradient(135deg, #0c3547, #1a6b8a);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+        }
+        
+        .trade-off-box h3 { color: #f39c12; margin-bottom: 15px; }
+        .trade-off-box p { font-size: 0.9em; line-height: 1.6; margin-bottom: 10px; }
+        
+        footer {
+            text-align: center;
+            padding: 20px;
+            margin-top: 30px;
+            color: rgba(255,255,255,0.8);
+            font-size: 0.85em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="index.html" style="display: inline-flex; align-items: center; gap: 8px; color: white; text-decoration: none; background: rgba(255,255,255,0.15); padding: 10px 20px; border-radius: 25px; font-size: 0.9em; margin-bottom: 15px; transition: background 0.2s;">
+            <span>←</span> <span>Return to Home Page</span>
+        </a>
+        <h1>🚢 Multimodal Route Planner</h1>
+        <p class="subtitle">Design optimal freight routes using multiple transport modes | Compare cost, time, and carbon footprint trade-offs</p>
+        
+        <div class="theory-banner">
+            <h3>📚 Key Concepts: Multimodal vs Intermodal Transport</h3>
+            <div class="definitions">
+                <div class="def-box">
+                    <strong>Multimodal Transport</strong><br>
+                    Uses multiple modes under a <em>single contract</em> with one Multimodal Transport Operator (MTO). Door-to-door service with single liability.
+                </div>
+                <div class="def-box">
+                    <strong>Intermodal Transport</strong><br>
+                    Uses multiple modes with <em>separate contracts</em> for each leg. Shipper coordinates and bears responsibility for each segment.
+                </div>
+                <div class="def-box">
+                    <strong>Transmodal Transport</strong><br>
+                    Movement within the <em>same mode</em> (e.g., ship-to-ship transfer). Often used at transhipment hubs.
+                </div>
+            </div>
+        </div>
+        
+        <div class="main-grid">
+            <div class="controls">
+                <div class="card">
+                    <h2>📍 Route Details</h2>
+                    
+                    <div class="form-group">
+                        <label>Origin City</label>
+                        <select id="origin">
+                            <option value="maidstone">Maidstone, UK</option>
+                            <option value="hamburg">Hamburg, Germany</option>
+                            <option value="shenzhen">Shenzhen, China</option>
+                            <option value="cartagena">Cartagena, Colombia</option>
+                            <option value="rotterdam">Rotterdam, Netherlands</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Destination City</label>
+                        <select id="destination">
+                            <option value="amiens">Amiens, France</option>
+                            <option value="arnhem">Arnhem, Netherlands</option>
+                            <option value="berlin">Berlin, Germany</option>
+                            <option value="paris">Paris, France</option>
+                            <option value="munich">Munich, Germany</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Distance (km)</label>
+                            <input type="number" id="distance" value="350" min="50" max="15000">
+                        </div>
+                        <div class="form-group">
+                            <label>Containers (TEU)</label>
+                            <input type="number" id="containers" value="7" min="1" max="100">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h2>📦 Cargo Type</h2>
+                    <div class="cargo-types">
+                        <div class="cargo-type selected" data-type="general" onclick="selectCargo(this)">
+                            <div class="icon">📦</div>
+                            <div>General Goods</div>
+                        </div>
+                        <div class="cargo-type" data-type="perishable" onclick="selectCargo(this)">
+                            <div class="icon">🥬</div>
+                            <div>Perishables</div>
+                        </div>
+                        <div class="cargo-type" data-type="highvalue" onclick="selectCargo(this)">
+                            <div class="icon">💎</div>
+                            <div>High Value</div>
+                        </div>
+                        <div class="cargo-type" data-type="bulk" onclick="selectCargo(this)">
+                            <div class="icon">🪨</div>
+                            <div>Bulk/Heavy</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h2>⚖️ Priorities</h2>
+                    
+                    <div class="form-group">
+                        <label>Cost vs Speed Priority</label>
+                        <div class="priority-slider">
+                            <span>💷</span>
+                            <input type="range" id="costSpeed" min="0" max="100" value="50">
+                            <span>⚡</span>
+                        </div>
+                        <div class="priority-labels">
+                            <span>Minimise Cost</span>
+                            <span>Minimise Time</span>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Environmental Priority</label>
+                        <div class="priority-slider">
+                            <span>💰</span>
+                            <input type="range" id="envPriority" min="0" max="100" value="30">
+                            <span>🌱</span>
+                        </div>
+                        <div class="priority-labels">
+                            <span>Cost Focus</span>
+                            <span>Carbon Focus</span>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Maximum Transit Time (days)</label>
+                        <input type="number" id="maxDays" value="10" min="1" max="60">
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h2>🚧 Constraints & Disruptions</h2>
+                    
+                    <div class="form-group">
+                        <label><input type="checkbox" id="portCongestion"> Port congestion (+3 days)</label>
+                    </div>
+                    <div class="form-group">
+                        <label><input type="checkbox" id="railStrike"> Rail strikes (avoid rail)</label>
+                    </div>
+                    <div class="form-group">
+                        <label><input type="checkbox" id="channelDelay"> Channel crossing delays (+1 day)</label>
+                    </div>
+                    <div class="form-group">
+                        <label><input type="checkbox" id="customsDelay"> Customs delays (+2 days)</label>
+                    </div>
+                </div>
+                
+                <button class="btn btn-primary" onclick="calculateRoutes()">🔍 Calculate Optimal Routes</button>
+            </div>
+            
+            <div class="results-area">
+                <div id="routeResults">
+                    <!-- Route cards will be inserted here -->
+                    <div class="route-card recommended">
+                        <div class="route-header">
+                            <h3>🏆 Recommended Route</h3>
+                            <span class="route-badge badge-recommended">Best Match</span>
+                        </div>
+                        <div class="route-journey" id="route1Journey">
+                            <div class="journey-node"><div class="icon">🏭</div><div class="label">Origin</div></div>
+                            <div class="journey-leg"><div class="mode">🚛</div><div class="details">Road<br>50km</div></div>
+                            <div class="journey-node"><div class="icon">⚓</div><div class="label">Port</div></div>
+                            <div class="journey-leg"><div class="mode">⛴️</div><div class="details">Ferry<br>35km</div></div>
+                            <div class="journey-node"><div class="icon">⚓</div><div class="label">Port</div></div>
+                            <div class="journey-leg"><div class="mode">🚛</div><div class="details">Road<br>180km</div></div>
+                            <div class="journey-node"><div class="icon">🏢</div><div class="label">Destination</div></div>
+                        </div>
+                        <div class="route-stats" id="route1Stats">
+                            <div class="stat-box"><div class="value">£2,450</div><div class="label">Total Cost</div></div>
+                            <div class="stat-box"><div class="value">2.5</div><div class="label">Days</div></div>
+                            <div class="stat-box highlight-green"><div class="value">420</div><div class="label">kg CO₂</div></div>
+                            <div class="stat-box"><div class="value">87</div><div class="label">Score</div></div>
+                        </div>
+                    </div>
+                    
+                    <div class="route-card alternative">
+                        <div class="route-header">
+                            <h3>⚡ Fastest Route</h3>
+                            <span class="route-badge badge-fastest">Quickest</span>
+                        </div>
+                        <div class="route-journey" id="route2Journey">
+                            <div class="journey-node"><div class="icon">🏭</div><div class="label">Origin</div></div>
+                            <div class="journey-leg"><div class="mode">🚛</div><div class="details">Road<br>350km</div></div>
+                            <div class="journey-node"><div class="icon">🏢</div><div class="label">Destination</div></div>
+                        </div>
+                        <div class="route-stats" id="route2Stats">
+                            <div class="stat-box"><div class="value">£3,100</div><div class="label">Total Cost</div></div>
+                            <div class="stat-box highlight-green"><div class="value">1.5</div><div class="label">Days</div></div>
+                            <div class="stat-box highlight-red"><div class="value">680</div><div class="label">kg CO₂</div></div>
+                            <div class="stat-box"><div class="value">72</div><div class="label">Score</div></div>
+                        </div>
+                    </div>
+                    
+                    <div class="route-card">
+                        <div class="route-header">
+                            <h3>🌱 Greenest Route</h3>
+                            <span class="route-badge badge-greenest">Lowest CO₂</span>
+                        </div>
+                        <div class="route-journey" id="route3Journey">
+                            <div class="journey-node"><div class="icon">🏭</div><div class="label">Origin</div></div>
+                            <div class="journey-leg"><div class="mode">🚛</div><div class="details">Road<br>30km</div></div>
+                            <div class="journey-node"><div class="icon">🚂</div><div class="label">Rail Terminal</div></div>
+                            <div class="journey-leg"><div class="mode">🚆</div><div class="details">Rail<br>300km</div></div>
+                            <div class="journey-node"><div class="icon">🚂</div><div class="label">Rail Terminal</div></div>
+                            <div class="journey-leg"><div class="mode">🚛</div><div class="details">Road<br>20km</div></div>
+                            <div class="journey-node"><div class="icon">🏢</div><div class="label">Destination</div></div>
+                        </div>
+                        <div class="route-stats" id="route3Stats">
+                            <div class="stat-box"><div class="value">£2,200</div><div class="label">Total Cost</div></div>
+                            <div class="stat-box"><div class="value">3.0</div><div class="label">Days</div></div>
+                            <div class="stat-box highlight-green"><div class="value">185</div><div class="label">kg CO₂</div></div>
+                            <div class="stat-box"><div class="value">79</div><div class="label">Score</div></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="charts-row">
+                    <div class="chart-card">
+                        <h3>📊 Route Comparison</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="comparisonChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-card">
+                        <h3>🌍 CO₂ Emissions by Mode</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="emissionsChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="swot-analysis">
+                    <h3>📋 SWOT Analysis: <span id="swotTitle">Road + Ferry + Road</span></h3>
+                    <div class="swot-grid" id="swotGrid">
+                        <div class="swot-box swot-strengths">
+                            <h4>💪 Strengths</h4>
+                            <ul>
+                                <li>Direct delivery flexibility</li>
+                                <li>Good balance of cost and speed</li>
+                                <li>Established ferry services</li>
+                            </ul>
+                        </div>
+                        <div class="swot-box swot-weaknesses">
+                            <h4>⚠️ Weaknesses</h4>
+                            <ul>
+                                <li>Dependent on ferry schedules</li>
+                                <li>Possible delays at ports</li>
+                                <li>Weather dependency</li>
+                            </ul>
+                        </div>
+                        <div class="swot-box swot-opportunities">
+                            <h4>🚀 Opportunities</h4>
+                            <ul>
+                                <li>Consolidate shipments for better rates</li>
+                                <li>Use off-peak ferry slots</li>
+                                <li>Effective planning reduces delays</li>
+                            </ul>
+                        </div>
+                        <div class="swot-box swot-threats">
+                            <h4>⚡ Threats</h4>
+                            <ul>
+                                <li>Customs and border issues</li>
+                                <li>Fuel price fluctuations</li>
+                                <li>Traffic congestion</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="trade-off-box">
+                    <h3>💡 Trade-off Analysis & Decision Support</h3>
+                    <p id="tradeOffText">
+                        <strong>Current scenario:</strong> For general goods transport from Maidstone to Amiens, the Road-Ferry-Road combination offers the best balance. 
+                        While direct road transport is faster, the ferry crossing reduces overall costs and provides a break for drivers (compliance with EU driving regulations).
+                    </p>
+                    <p id="tradeOffAdvice">
+                        <strong>Recommendation:</strong> If reducing carbon footprint is a priority, consider the rail option despite the longer transit time. 
+                        Rail freight emits approximately 75% less CO₂ per tonne-km compared to road transport.
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p style="background: rgba(255,193,7,0.2); border: 1px solid rgba(255,193,7,0.4); border-radius: 8px; padding: 12px 15px; margin-bottom: 15px; font-size: 0.8em; color: #333;">
+                ⚠️ <strong>Note:</strong> This simulation is for educational demonstration purposes only. Results may differ significantly from real-world outcomes. It illustrates theoretical concepts based on the parameters you configure.
+            </p>
+            <p>© 2025 Dr Mohit Kumar Singh. All rights reserved.</p>
+            <p style="margin-top: 5px; font-size: 0.8em; opacity: 0.7;">TRAN1060: Passenger and Freight Transport | For educational purposes only.</p>
+        </footer>
+    </div>
+
+    <script>
+        let comparisonChart, emissionsChart;
+        let selectedCargo = 'general';
+        
+        // CO2 emissions per tonne-km (kg)
+        const co2Factors = {
+            road: 0.062,      // Heavy goods vehicle
+            rail: 0.015,      // Freight train
+            sea: 0.008,       // Container ship
+            barge: 0.020,     // Inland waterway
+            air: 0.500        // Air freight
+        };
+        
+        // Cost per tonne-km (£)
+        const costFactors = {
+            road: 0.12,
+            rail: 0.08,
+            sea: 0.03,
+            barge: 0.05,
+            air: 2.50
+        };
+        
+        // Speed km per day
+        const speedFactors = {
+            road: 600,
+            rail: 400,
+            sea: 500,
+            barge: 150,
+            air: 8000
+        };
+        
+        // Handling costs and times
+        const handlingCost = 150; // per container per transfer
+        const handlingTime = 0.5; // days per transfer
+        
+        function selectCargo(element) {
+            document.querySelectorAll('.cargo-type').forEach(el => el.classList.remove('selected'));
+            element.classList.add('selected');
+            selectedCargo = element.dataset.type;
+        }
+        
+        function calculateRoutes() {
+            const distance = parseFloat(document.getElementById('distance').value);
+            const containers = parseFloat(document.getElementById('containers').value);
+            const costSpeedPriority = parseFloat(document.getElementById('costSpeed').value) / 100;
+            const envPriority = parseFloat(document.getElementById('envPriority').value) / 100;
+            const maxDays = parseFloat(document.getElementById('maxDays').value);
+            
+            // Get constraints
+            const portCongestion = document.getElementById('portCongestion').checked;
+            const railStrike = document.getElementById('railStrike').checked;
+            const channelDelay = document.getElementById('channelDelay').checked;
+            const customsDelay = document.getElementById('customsDelay').checked;
+            
+            const extraDays = (portCongestion ? 3 : 0) + (channelDelay ? 1 : 0) + (customsDelay ? 2 : 0);
+            
+            // Cargo multipliers
+            const cargoMultipliers = {
+                general: { cost: 1.0, time: 1.0 },
+                perishable: { cost: 1.3, time: 0.7 },
+                highvalue: { cost: 1.5, time: 0.8 },
+                bulk: { cost: 0.8, time: 1.2 }
+            };
+            
+            const cargo = cargoMultipliers[selectedCargo];
+            const weight = containers * 20; // tonnes per TEU
+            
+            // Route 1: Road + Ferry + Road (multimodal)
+            const route1 = {
+                name: 'Road + Ferry + Road',
+                legs: [
+                    { mode: 'road', distance: distance * 0.15 },
+                    { mode: 'sea', distance: distance * 0.1 },
+                    { mode: 'road', distance: distance * 0.75 }
+                ],
+                transfers: 2
+            };
+            
+            // Route 2: Direct Road
+            const route2 = {
+                name: 'Direct Road',
+                legs: [{ mode: 'road', distance: distance }],
+                transfers: 0
+            };
+            
+            // Route 3: Road + Rail + Road
+            const route3 = {
+                name: 'Road + Rail + Road',
+                legs: [
+                    { mode: 'road', distance: distance * 0.1 },
+                    { mode: 'rail', distance: distance * 0.8 },
+                    { mode: 'road', distance: distance * 0.1 }
+                ],
+                transfers: 2,
+                disabled: railStrike
+            };
+            
+            // Calculate metrics for each route
+            function calculateRoute(route) {
+                if (route.disabled) {
+                    return { cost: Infinity, time: Infinity, co2: Infinity, score: 0 };
+                }
+                
+                let cost = 0, time = 0, co2 = 0;
+                
+                route.legs.forEach(leg => {
+                    cost += leg.distance * weight * costFactors[leg.mode];
+                    time += leg.distance / speedFactors[leg.mode];
+                    co2 += leg.distance * weight * co2Factors[leg.mode];
+                });
+                
+                // Add handling costs and time
+                cost += route.transfers * handlingCost * containers;
+                time += route.transfers * handlingTime;
+                time += extraDays;
+                
+                // Apply cargo multipliers
+                cost *= cargo.cost;
+                time *= cargo.time;
+                
+                // Calculate score (0-100)
+                const costScore = 100 - Math.min(100, (cost / 5000) * 100);
+                const timeScore = 100 - Math.min(100, (time / maxDays) * 100);
+                const co2Score = 100 - Math.min(100, (co2 / 2000) * 100);
+                
+                const score = (
+                    costScore * (1 - costSpeedPriority) * (1 - envPriority) +
+                    timeScore * costSpeedPriority * (1 - envPriority) +
+                    co2Score * envPriority
+                ) * (time <= maxDays ? 1 : 0.5);
+                
+                return { cost: Math.round(cost), time: time.toFixed(1), co2: Math.round(co2), score: Math.round(score) };
+            }
+            
+            const results = [
+                { ...route1, metrics: calculateRoute(route1) },
+                { ...route2, metrics: calculateRoute(route2) },
+                { ...route3, metrics: calculateRoute(route3) }
+            ];
+            
+            // Sort by score
+            results.sort((a, b) => b.metrics.score - a.metrics.score);
+            
+            // Update display
+            updateRouteDisplay(results, distance);
+            updateCharts(results);
+            updateSWOT(results[0]);
+            updateTradeOff(results, selectedCargo, envPriority);
+        }
+        
+        function updateRouteDisplay(routes, totalDistance) {
+            const badges = ['badge-recommended', 'badge-fastest', 'badge-greenest'];
+            const titles = ['🏆 Recommended Route', '⚡ Alternative Route', '🌱 Third Option'];
+            
+            routes.forEach((route, i) => {
+                const statsEl = document.getElementById(`route${i+1}Stats`);
+                const journeyEl = document.getElementById(`route${i+1}Journey`);
+                
+                if (statsEl) {
+                    const m = route.metrics;
+                    statsEl.innerHTML = `
+                        <div class="stat-box"><div class="value">£${m.cost.toLocaleString()}</div><div class="label">Total Cost</div></div>
+                        <div class="stat-box ${parseFloat(m.time) <= 2 ? 'highlight-green' : ''}"><div class="value">${m.time}</div><div class="label">Days</div></div>
+                        <div class="stat-box ${m.co2 < 300 ? 'highlight-green' : m.co2 > 600 ? 'highlight-red' : ''}"><div class="value">${m.co2}</div><div class="label">kg CO₂</div></div>
+                        <div class="stat-box"><div class="value">${m.score}</div><div class="label">Score</div></div>
+                    `;
+                }
+                
+                if (journeyEl) {
+                    let html = '<div class="journey-node"><div class="icon">🏭</div><div class="label">Origin</div></div>';
+                    
+                    route.legs.forEach((leg, j) => {
+                        const modeIcons = { road: '🚛', rail: '🚆', sea: '⛴️', barge: '🚢', air: '✈️' };
+                        const nodeIcons = { road: '🚂', rail: '🚂', sea: '⚓', barge: '⚓' };
+                        
+                        html += `
+                            <div class="journey-leg">
+                                <div class="mode">${modeIcons[leg.mode]}</div>
+                                <div class="details">${leg.mode.charAt(0).toUpperCase() + leg.mode.slice(1)}<br>${Math.round(leg.distance)}km</div>
+                            </div>
+                        `;
+                        
+                        if (j < route.legs.length - 1) {
+                            html += `<div class="journey-node"><div class="icon">${nodeIcons[leg.mode] || '📍'}</div><div class="label">${leg.mode === 'sea' ? 'Port' : 'Terminal'}</div></div>`;
+                        }
+                    });
+                    
+                    html += '<div class="journey-node"><div class="icon">🏢</div><div class="label">Destination</div></div>';
+                    journeyEl.innerHTML = html;
+                }
+            });
+        }
+        
+        function updateCharts(routes) {
+            // Comparison chart
+            comparisonChart.data.labels = routes.map(r => r.name);
+            comparisonChart.data.datasets[0].data = routes.map(r => r.metrics.cost / 100);
+            comparisonChart.data.datasets[1].data = routes.map(r => parseFloat(r.metrics.time) * 10);
+            comparisonChart.data.datasets[2].data = routes.map(r => r.metrics.co2 / 10);
+            comparisonChart.update();
+            
+            // Emissions by mode chart
+            const modeEmissions = { Road: 0, Rail: 0, Sea: 0 };
+            routes.forEach(route => {
+                route.legs.forEach(leg => {
+                    const modeName = leg.mode.charAt(0).toUpperCase() + leg.mode.slice(1);
+                    if (modeName === 'Road') modeEmissions.Road += leg.distance * 20 * co2Factors.road;
+                    if (modeName === 'Rail') modeEmissions.Rail += leg.distance * 20 * co2Factors.rail;
+                    if (modeName === 'Sea') modeEmissions.Sea += leg.distance * 20 * co2Factors.sea;
+                });
+            });
+            
+            emissionsChart.data.datasets[0].data = [modeEmissions.Road, modeEmissions.Rail, modeEmissions.Sea];
+            emissionsChart.update();
+        }
+        
+        function updateSWOT(route) {
+            document.getElementById('swotTitle').textContent = route.name;
+            
+            const swotData = {
+                'Road + Ferry + Road': {
+                    strengths: ['Combination of modes', 'Access to sea transport', 'Good balance of cost/speed'],
+                    weaknesses: ['Dependent on ferry schedules', 'Possible delays at ports', 'Weather dependency'],
+                    opportunities: ['Effective planning reduces delays', 'Consolidate shipments', 'Use off-peak slots'],
+                    threats: ['Customs and border issues', 'Fuel price fluctuations', 'Port congestion']
+                },
+                'Direct Road': {
+                    strengths: ['Direct delivery flexibility', 'Easy tracking', 'Fast for short-medium distances'],
+                    weaknesses: ['Higher CO₂ emissions', 'Driver fatigue regulations', 'Traffic congestion'],
+                    opportunities: ['Electric vehicles emerging', 'Route optimisation technology', 'Platooning'],
+                    threats: ['Fuel price volatility', 'Road tolls increasing', 'Emissions regulations']
+                },
+                'Road + Rail + Road': {
+                    strengths: ['Environmentally friendly', 'Cost efficient for long distances', 'High capacity'],
+                    weaknesses: ['Limited flexibility', 'Fixed schedules', 'Requires terminals'],
+                    opportunities: ['Infrastructure improvements', 'Government incentives', 'Growing demand'],
+                    threats: ['Dependency on rail networks', 'Strike action', 'Terminal capacity']
+                }
+            };
+            
+            const swot = swotData[route.name] || swotData['Direct Road'];
+            
+            document.getElementById('swotGrid').innerHTML = `
+                <div class="swot-box swot-strengths">
+                    <h4>💪 Strengths</h4>
+                    <ul>${swot.strengths.map(s => `<li>${s}</li>`).join('')}</ul>
+                </div>
+                <div class="swot-box swot-weaknesses">
+                    <h4>⚠️ Weaknesses</h4>
+                    <ul>${swot.weaknesses.map(w => `<li>${w}</li>`).join('')}</ul>
+                </div>
+                <div class="swot-box swot-opportunities">
+                    <h4>🚀 Opportunities</h4>
+                    <ul>${swot.opportunities.map(o => `<li>${o}</li>`).join('')}</ul>
+                </div>
+                <div class="swot-box swot-threats">
+                    <h4>⚡ Threats</h4>
+                    <ul>${swot.threats.map(t => `<li>${t}</li>`).join('')}</ul>
+                </div>
+            `;
+        }
+        
+        function updateTradeOff(routes, cargo, envPriority) {
+            const best = routes[0];
+            const cargoNames = { general: 'general goods', perishable: 'perishable items', highvalue: 'high-value electronics', bulk: 'bulk materials' };
+            
+            let text = `<strong>Current scenario:</strong> For ${cargoNames[cargo]} transport, ${best.name} scores highest (${best.metrics.score}/100). `;
+            text += `Total cost: £${best.metrics.cost.toLocaleString()}, Transit time: ${best.metrics.time} days, CO₂: ${best.metrics.co2} kg.`;
+            
+            document.getElementById('tradeOffText').innerHTML = text;
+            
+            let advice = '<strong>Recommendation:</strong> ';
+            if (envPriority > 0.6) {
+                advice += 'Given your environmental priorities, rail-based options significantly reduce carbon footprint. Rail freight emits ~75% less CO₂ per tonne-km than road.';
+            } else if (cargo === 'perishable') {
+                advice += 'For perishables, prioritise speed over cost. Consider direct road transport or even air freight for high-value fresh goods.';
+            } else if (cargo === 'bulk') {
+                advice += 'For bulk goods, sea and rail modes offer significant economies of scale. The slower transit time is usually acceptable for non-time-sensitive materials.';
+            } else {
+                advice += 'Balance your priorities based on customer requirements. Consider consolidating shipments with other orders to achieve better rates.';
+            }
+            
+            document.getElementById('tradeOffAdvice').innerHTML = advice;
+        }
+        
+        function initCharts() {
+            comparisonChart = new Chart(document.getElementById('comparisonChart'), {
+                type: 'bar',
+                data: {
+                    labels: ['Route 1', 'Route 2', 'Route 3'],
+                    datasets: [
+                        { label: 'Cost (×100)', data: [], backgroundColor: '#3498db' },
+                        { label: 'Time (×10)', data: [], backgroundColor: '#e67e22' },
+                        { label: 'CO₂ (×10)', data: [], backgroundColor: '#27ae60' }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom' } },
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+            
+            emissionsChart = new Chart(document.getElementById('emissionsChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['Road', 'Rail', 'Sea'],
+                    datasets: [{
+                        data: [60, 20, 20],
+                        backgroundColor: ['#e74c3c', '#27ae60', '#3498db']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom' } }
+                }
+            });
+        }
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            initCharts();
+            calculateRoutes();
+            
+            // Add event listeners
+            ['origin', 'destination', 'distance', 'containers', 'costSpeed', 'envPriority', 'maxDays',
+             'portCongestion', 'railStrike', 'channelDelay', 'customsDelay'].forEach(id => {
+                document.getElementById(id).addEventListener('change', calculateRoutes);
+                document.getElementById(id).addEventListener('input', calculateRoutes);
+            });
+        });
+    </script>
+</body>
+</html>
