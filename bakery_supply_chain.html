@@ -723,7 +723,8 @@
             document.getElementById('demandLabel').textContent = Math.round(demand);
 
             const diff = production - demand;
-            document.getElementById('balanceBeam').style.transform = `translateX(-50%) rotate(${Math.max(-10, Math.min(10, diff / 10))}deg)`;
+            const angle = -Math.max(-10, Math.min(10, diff / 8));   // negative = left (production) side down
+            document.getElementById('balanceBeam').style.transform = `translateX(-50%) rotate(${angle}deg)`;
 
             const status = document.getElementById('balanceStatus');
             if (Math.round(production) === Math.round(demand)) { status.textContent = 'BALANCED'; status.className = 'balance-status balanced'; }
