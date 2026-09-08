@@ -349,6 +349,64 @@
         
         .chart-wrapper { height: 220px; }
         
+
+        .charts-grid.three { grid-template-columns: repeat(3, 1fr); }
+        @media (max-width: 1400px) { .charts-grid.three { grid-template-columns: 1fr; } }
+        .charts-grid.three .chart-wrapper { height: 240px; }
+
+        .monitor-card {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+        }
+        .monitor-card h3 {
+            color: #8B4513;
+            font-size: 0.9em;
+            margin-bottom: 10px;
+        }
+        .monitor-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 8px;
+        }
+        @media (max-width: 1100px) { .monitor-grid { grid-template-columns: repeat(3, 1fr); } }
+        .monitor {
+            background: #fdf5e6;
+            border: 1px solid #f5deb3;
+            border-radius: 8px;
+            padding: 8px 10px;
+        }
+        .monitor .m-label { font-size: 0.7em; color: #666; margin-bottom: 3px; }
+        .monitor .m-value { font-size: 1em; font-weight: bold; color: #8B4513; font-variant-numeric: tabular-nums; }
+
+        .console-card {
+            background: #1e1e1e;
+            border-radius: 12px;
+            padding: 15px;
+        }
+        .console-card h3 {
+            color: #f5deb3;
+            font-size: 0.9em;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .console-card h3 code { color: #f39c12; }
+        .console-toggle { font-size: 0.85em; font-weight: normal; color: #bbb; display: flex; align-items: center; gap: 6px; }
+        #consoleLog {
+            max-height: 260px;
+            overflow-y: auto;
+            margin: 0;
+            font-family: Consolas, 'Courier New', monospace;
+            font-size: 0.75em;
+            line-height: 1.45;
+            color: #d4d4d4;
+            white-space: pre-wrap;
+        }
+
         .output-card {
             background: linear-gradient(135deg, #2c3e50, #34495e);
             color: white;
@@ -492,7 +550,7 @@
             <span>←</span> <span>Return to Home Page</span>
         </a>
         <h1>🍞 Bakery Supply Chain Sustainability Simulator</h1>
-        <p class="subtitle">Run multiple years and change your selections between years to see long-term impacts on profitability and sustainability</p>
+        <p class="subtitle">Each year runs 12 monthly rounds of the NetLogo model. Change your product, supplier and logistics choices between years to see the long-term impact on profit and sustainability</p>
         
         <div class="main-grid">
             <div class="controls">
@@ -612,49 +670,85 @@
                 
                 <div class="charts-grid">
                     <div class="chart-card">
-                        <h3>📈 Demand, Production & Price (All Years)</h3>
+                        <h3>📈 Demand, Production &amp; Price</h3>
                         <div class="chart-wrapper"><canvas id="demandChart"></canvas></div>
                     </div>
                     <div class="chart-card">
-                        <h3>💰 Annual Profit Margin Trend</h3>
+                        <h3>🌱 Firm's Overall Sustainability (FES-t &amp; FSS-t)</h3>
+                        <div class="chart-wrapper"><canvas id="sustainChart"></canvas></div>
+                    </div>
+                </div>
+
+                <div class="charts-grid three">
+                    <div class="chart-card">
+                        <h3>🌾 Supplier's Performance</h3>
+                        <div class="chart-wrapper"><canvas id="supplierChart"></canvas></div>
+                    </div>
+                    <div class="chart-card">
+                        <h3>🏭 The Firm's Performance</h3>
+                        <div class="chart-wrapper"><canvas id="firmChart"></canvas></div>
+                    </div>
+                    <div class="chart-card">
+                        <h3>🚚 Logistics Service Provider's Performance</h3>
+                        <div class="chart-wrapper"><canvas id="logisticsChart"></canvas></div>
+                    </div>
+                </div>
+
+                <div class="charts-grid">
+                    <div class="chart-card">
+                        <h3>💰 Annual Profit Margin by Year</h3>
                         <div class="chart-wrapper"><canvas id="profitChart"></canvas></div>
                     </div>
                     <div class="chart-card">
-                        <h3>🌱 Sustainability Scores (All Years)</h3>
-                        <div class="chart-wrapper"><canvas id="sustainChart"></canvas></div>
-                    </div>
-                    <div class="chart-card">
-                        <h3>💷 Cost Breakdown by Year</h3>
+                        <h3>💷 Combined Cost per Month (sustainability + price) × quantity</h3>
                         <div class="chart-wrapper"><canvas id="costChart"></canvas></div>
                     </div>
                 </div>
-                
+
+                <div class="monitor-card">
+                    <h3>🔢 Monitors — current month (<span id="monitorMonth">–</span>)</h3>
+                    <div class="monitor-grid">
+                        <div class="monitor"><div class="m-label">Demand</div><div class="m-value" id="mDemand">–</div></div>
+                        <div class="monitor"><div class="m-label">Price</div><div class="m-value" id="mPrice">–</div></div>
+                        <div class="monitor"><div class="m-label">Revenue R-t</div><div class="m-value" id="mRt">–</div></div>
+                        <div class="monitor"><div class="m-label">Profit P-t</div><div class="m-value" id="mPt">–</div></div>
+                        <div class="monitor"><div class="m-label">Profit margin PM-t</div><div class="m-value" id="mPMt">–</div></div>
+                        <div class="monitor"><div class="m-label">Total product cost</div><div class="m-value" id="mPcost">–</div></div>
+                        <div class="monitor"><div class="m-label">Total supplier cost</div><div class="m-value" id="mScost">–</div></div>
+                        <div class="monitor"><div class="m-label">Total logistics cost</div><div class="m-value" id="mLcost">–</div></div>
+                        <div class="monitor"><div class="m-label">Total combined cost</div><div class="m-value" id="mTcost">–</div></div>
+                        <div class="monitor"><div class="m-label">Max product sustainability</div><div class="m-value" id="mPmax">–</div></div>
+                        <div class="monitor"><div class="m-label">Max supplier sustainability</div><div class="m-value" id="mSmax">–</div></div>
+                        <div class="monitor"><div class="m-label">Max logistics sustainability</div><div class="m-value" id="mLmax">–</div></div>
+                    </div>
+                </div>
+
                 <div class="output-card">
-                    <h3>📊 Current Year Results</h3>
+                    <h3>📊 Current Year Results (NetLogo output)</h3>
                     <div class="output-grid">
                         <div class="output-item">
-                            <div class="label">Profit Margin</div>
+                            <div class="label">Annual profit margin (in %)</div>
                             <div class="value" id="annualProfit">--%</div>
                             <div class="trend neutral" id="profitTrend"></div>
                         </div>
                         <div class="output-item">
-                            <div class="label">Environmental Score</div>
+                            <div class="label">Annual environmental sustainability</div>
                             <div class="value" id="annualEnviro">--</div>
                             <div class="trend neutral" id="enviroTrend"></div>
                         </div>
                         <div class="output-item">
-                            <div class="label">Social Score</div>
+                            <div class="label">Annual social sustainability</div>
                             <div class="value" id="annualSocial">--</div>
                             <div class="trend neutral" id="socialTrend"></div>
                         </div>
                         <div class="output-item">
-                            <div class="label">Average Price</div>
+                            <div class="label">Average price</div>
                             <div class="value" id="annualPrice">£--</div>
                             <div class="trend neutral" id="priceTrend"></div>
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="output-card" style="background: linear-gradient(135deg, #1a5276, #2874a6);">
                     <h3>📈 Cumulative Results (All Years)</h3>
                     <div class="output-grid">
@@ -676,7 +770,15 @@
                         </div>
                     </div>
                 </div>
-                
+
+                <div class="console-card">
+                    <h3><span>🖥️ Command Center (NetLogo <code>show</code> / <code>output-print</code> log)</span>
+                        <label class="console-toggle"><input type="checkbox" id="verboseLog" checked> monthly detail</label>
+                    </h3>
+                    <pre id="consoleLog">observer&gt; setup
+observer&gt; go</pre>
+                </div>
+
                 <div class="history-card">
                     <h3>📋 Decision History (🔴 = selection changed from previous year)</h3>
                     <table class="history-table">
@@ -693,77 +795,222 @@
     </div>
 
     <script>
+        // ------------------------------------------------------------------
+        // Parameters — identical to the NetLogo `setup` procedure
+        // ------------------------------------------------------------------
         const products = {
-            'golden': { name: 'Golden Crust Classic', prodCost: 7, prodStdev: 2, sustain: 70, sustainStdev: 10 },
-            'harvest': { name: 'Harvest Grain Loaf', prodCost: 7.5, prodStdev: 1, sustain: 75, sustainStdev: 5 },
-            'sunrise': { name: 'Sunrise Sourdough', prodCost: 9, prodStdev: 1.5, sustain: 90, sustainStdev: 5 },
-            'honey': { name: 'Honey Wheat Harmony', prodCost: 9.2, prodStdev: 1.5, sustain: 92, sustainStdev: 3 },
-            'rye': { name: 'Rye & Shine', prodCost: 9.2, prodStdev: 1.5, sustain: 91, sustainStdev: 3 }
+            'golden':  { name: 'Golden Crust Classic', prodCost: 7,   prodStdev: 2,   sustain: 70, sustainStdev: 10 },
+            'harvest': { name: 'Harvest Grain Loaf',   prodCost: 7.5, prodStdev: 1,   sustain: 75, sustainStdev: 5 },
+            'sunrise': { name: 'Sunrise Sourdough',    prodCost: 9,   prodStdev: 1.5, sustain: 90, sustainStdev: 5 },
+            'honey':   { name: 'Honey Wheat Harmony',  prodCost: 9.2, prodStdev: 1.5, sustain: 92, sustainStdev: 3 },
+            'rye':     { name: 'Rye & Shine',          prodCost: 9.2, prodStdev: 1.5, sustain: 91, sustainStdev: 3 }
         };
-        
+
         const suppliers = {
-            'golden-grain': { name: 'Golden Grain Mills', price: 7, priceStdev: 2, sustain: 70, sustainStdev: 10 },
-            'harvest-hearth': { name: 'Harvest & Hearth', price: 7.5, priceStdev: 1, sustain: 75, sustainStdev: 5 },
-            'pure-field': { name: 'Pure-Field Grains', price: 9, priceStdev: 1.5, sustain: 90, sustainStdev: 3 },
-            'millstone': { name: 'Millstone Select', price: 9.5, priceStdev: 2.5, sustain: 92, sustainStdev: 5 },
-            'bakers-root': { name: "Bakers' Root", price: 9, priceStdev: 3, sustain: 90, sustainStdev: 7 }
+            'golden-grain':   { name: 'Golden Grain Mills',         price: 7,   priceStdev: 2,   sustain: 70, sustainStdev: 10 },
+            'harvest-hearth': { name: 'Harvest & Hearth Flour Co.', price: 7.5, priceStdev: 1,   sustain: 75, sustainStdev: 5 },
+            'pure-field':     { name: 'Pure-Field Grains',          price: 9,   priceStdev: 1.5, sustain: 90, sustainStdev: 3 },
+            'millstone':      { name: 'Millstone Select',           price: 9.5, priceStdev: 2.5, sustain: 92, sustainStdev: 5 },
+            'bakers-root':    { name: "Bakers' Root Supply",        price: 9,   priceStdev: 3,   sustain: 90, sustainStdev: 7 }
         };
-        
+
         const logistics = {
-            'fresh-route': { name: 'Fresh-Route', price: 7, priceStdev: 2, sustain: 70, sustainStdev: 10 },
-            'crate-freight': { name: 'Crate & Freight', price: 7.5, priceStdev: 1, sustain: 75, sustainStdev: 5 },
-            'swift-bite': { name: 'Swift-Bite', price: 9, priceStdev: 1.5, sustain: 90, sustainStdev: 3 },
-            'daily-haul': { name: 'Daily-Haul', price: 9.5, priceStdev: 3, sustain: 92, sustainStdev: 7 },
-            'urban-crate': { name: 'Urban-Crate', price: 9, priceStdev: 2.5, sustain: 90, sustainStdev: 5 }
+            'fresh-route':   { name: 'Fresh-Route Logistics',   price: 7,   priceStdev: 2,   sustain: 70, sustainStdev: 10 },
+            'crate-freight': { name: 'Crate & Freight Co.',     price: 7.5, priceStdev: 1,   sustain: 75, sustainStdev: 5 },
+            'swift-bite':    { name: 'Swift-Bite Transport',    price: 9,   priceStdev: 1.5, sustain: 90, sustainStdev: 3 },
+            'daily-haul':    { name: 'Daily-Haul Distribution', price: 9.5, priceStdev: 3,   sustain: 92, sustainStdev: 7 },
+            'urban-crate':   { name: 'Urban-Crate Express',     price: 9,   priceStdev: 2.5, sustain: 90, sustainStdev: 5 }
         };
-        
+
+        const DEMAND_MEAN = 100, DEMAND_STDEV = 10;   // set demand random-normal 100 10
+        const MAX_PRICE = 110;                          // set price 110
+
         let currentYear = 1;
         const maxYears = 5;
         let isRunning = false;
         let previousSelections = { product: null, supplier: null, logistics: null };
         let yearlyResults = [];
-        let allMonthlyData = { labels: [], demand: [], production: [], price: [], enviro: [], social: [] };
+        let counters = 1;                                // NetLogo `counters` (x-axis of every plotxy)
+        // Cumulative accumulators across all years, like NetLogo's PMT-tt / FES-tt / FSS-tt / priceL
+        let cum = { PMT: 0, FES: 0, FSS: 0, priceL: 0, n: 0 };
+        let series = null;
         let charts = {};
-        
+        const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+        function emptySeries() {
+            return { labels: [], demand: [], production: [], price: [],
+                     FES: [], FSS: [],
+                     suppCost: [], SS1: [], SS2: [],
+                     PM: [], PS1: [], PS2: [],
+                     logCost: [], LS1: [], LS2: [],
+                     totalPcost: [], totalScost: [], totalLcost: [] };
+        }
+        series = emptySeries();
+
+        // random-normal mean stdev  (Box–Muller)
         function randomNormal(mean, stdev) {
             let u = 0, v = 0;
             while (u === 0) u = Math.random();
             while (v === 0) v = Math.random();
             return mean + stdev * Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
         }
-        
+        // max list (random-normal m sd) (m - 2 * sd)  — the floored price/production draw used in NetLogo
+        function flooredNormal(mean, stdev) {
+            return Math.max(randomNormal(mean, stdev), mean - 2 * stdev);
+        }
+        const fmt = (x, n = 2) => (Math.round(x * 10 ** n) / 10 ** n).toFixed(n);
+
+        // ------------------------------------------------------------------
+        // Command-center log (mirrors NetLogo `show` and `output-print`)
+        // ------------------------------------------------------------------
+        const logLines = ['observer> setup', 'observer> go'];
+        function show(msg) { logLines.push('observer: "' + msg + '"'); }
+        function outputPrint(msg) { logLines.push(msg); }
+        function flushLog() {
+            const pre = document.getElementById('consoleLog');
+            if (logLines.length > 4000) logLines.splice(2, logLines.length - 4000);
+            pre.textContent = logLines.join('\n');
+            pre.scrollTop = pre.scrollHeight;
+        }
+
+        // ------------------------------------------------------------------
+        // One month = one call of NetLogo `calculate-total-cost`
+        // ------------------------------------------------------------------
+        function simulateMonth(prodKey, suppKey, logKey, production, d, verbose) {
+            // ---- generate-random-costs ------------------------------------
+            const demand = randomNormal(DEMAND_MEAN, DEMAND_STDEV);
+
+            // Every product / supplier / provider gets a fresh draw each month
+            // (needed because the price rule compares the chosen one against the max of all five).
+            const P = {}, S = {}, L = {};
+            for (const k in products) {
+                const p = products[k];
+                const sust = randomNormal(p.sustain, p.sustainStdev);
+                const cost = flooredNormal(p.prodCost, p.prodStdev);
+                P[k] = { sust, cost, combined: sust + cost };          // generated-cost-X
+            }
+            for (const k in suppliers) {
+                const s = suppliers[k];
+                const sust = randomNormal(s.sustain, s.sustainStdev);
+                const price = flooredNormal(s.price, s.priceStdev);
+                S[k] = { sust, price, combined: sust + price };        // cost-X
+            }
+            for (const k in logistics) {
+                const l = logistics[k];
+                const sust = randomNormal(l.sustain, l.sustainStdev);
+                const price = flooredNormal(l.price, l.priceStdev);
+                L[k] = { sust, price, combined: sust + price };        // cost-X
+            }
+
+            // Independent draws for the performance plots (PS-t1/2, SS-t1/2, LS-t1/2)
+            const prod = products[prodKey], supp = suppliers[suppKey], logi = logistics[logKey];
+            const PS1 = randomNormal(prod.sustain, prod.sustainStdev);
+            const PS2 = randomNormal(prod.sustain, prod.sustainStdev);
+            const SS1 = randomNormal(supp.sustain, supp.sustainStdev);
+            const SS2 = randomNormal(supp.sustain, supp.sustainStdev);
+            const LS1 = randomNormal(logi.sustain, logi.sustainStdev);
+            const LS2 = randomNormal(logi.sustain, logi.sustainStdev);
+
+            // Chosen option's current-month values
+            const supplierSustCurrent  = S[suppKey].sust;    // Supplier-sustainable-current-cost
+            const supplierPriceCurrent = S[suppKey].price;   // Supplier-price-current-cost
+            const logisticsSustCurrent  = L[logKey].sust;    // Logistics-sustainable-current-cost
+            const logisticsPriceCurrent = L[logKey].price;   // Logistics-price-current-cost
+
+            // ---- calculate-total-cost --------------------------------------
+            const qty = production;                          // qty-<chosen> = production, others 0
+            const totalPcost = qty * P[prodKey].combined;    // total-pcost
+            const totalScost = S[suppKey].combined * qty;    // total-supplier-cost
+            const totalLcost = L[logKey].combined * qty;     // total-logistics-cost
+            const totalCost  = totalLcost + totalScost + totalPcost;
+
+            // finding max sustainable value (over ALL five options in each tier)
+            const Lmax = Math.max(...Object.values(L).map(o => o.sust));
+            const Smax = Math.max(...Object.values(S).map(o => o.sust));
+            const Pmax = Math.max(...Object.values(P).map(o => o.sust));
+
+            // weighted averages — with a single product these equal the chosen product's draws
+            const productSustCurrent  = P[prodKey].sust;     // product-sustainable-current-cost
+            const productPriceCurrent = P[prodKey].cost;     // product-price-current-cost
+
+            // pricing rule
+            const price = (logisticsSustCurrent === Lmax && supplierSustCurrent === Smax && productSustCurrent === Pmax)
+                ? MAX_PRICE
+                : Math.min(logisticsSustCurrent, supplierSustCurrent, productSustCurrent);
+
+            // revenue, profit, margin
+            const sold = Math.min(demand, production);
+            const Rt = price * sold;
+            const Pt = Rt - d * (production - sold) - production * (productPriceCurrent + logisticsPriceCurrent + supplierPriceCurrent);
+            const PMt = Pt / Rt;
+
+            // firm-level environmental / social sustainability
+            const FES = 0.5 * PS1 + 0.25 * SS1 + 0.25 * LS1;
+            const FSS = 0.5 * PS2 + 0.25 * SS2 + 0.25 * LS2;
+
+            if (verbose) {
+                for (const k in suppliers) show(suppliers[k].name + ' - Combined Cost: ' + S[k].combined);
+                for (const k in logistics) show(logistics[k].name + ' - Combined Cost: ' + L[k].combined);
+                show('Total Product Cost: ' + totalPcost);
+                show('Total supplier  Cost: ' + totalScost);
+                show('Total logistics  Cost: ' + totalLcost);
+                show('Total sustainability  Cost: ' + totalCost);
+                show('Max logistics  Cost: ' + Lmax);
+                show('Max supplier  Cost: ' + Smax);
+                show('Max product  Cost: ' + Pmax);
+                show('Max price  Cost: ' + price);
+                show('Logistics-sustainable-current-cost: ' + logisticsSustCurrent);
+                show('Supplier-sustainable-current-cost: ' + supplierSustCurrent);
+                show('product-sustainable-current-cost: ' + productSustCurrent);
+                show('R-t: ' + Rt);
+                show('P-t: ' + Pt);
+                show('PM-t: ' + PMt);
+            }
+
+            return { demand, price, sold, Rt, Pt, PMt, FES, FSS,
+                     PS1, PS2, SS1, SS2, LS1, LS2,
+                     supplierPriceCurrent, logisticsPriceCurrent, productPriceCurrent,
+                     productSustCurrent, supplierSustCurrent, logisticsSustCurrent,
+                     totalPcost, totalScost, totalLcost, totalCost, Lmax, Smax, Pmax };
+        }
+
+        // ------------------------------------------------------------------
+        // UI helpers
+        // ------------------------------------------------------------------
         function updateProductDetails() {
             const prod = products[document.getElementById('productChoice').value];
-            document.getElementById('prodCost').textContent = `£${prod.prodCost.toFixed(2)}`;
+            document.getElementById('prodCost').textContent = `£${prod.prodCost.toFixed(2)} ± ${prod.prodStdev}`;
             document.getElementById('prodCost').className = `stat-value ${prod.prodCost < 8 ? 'high' : prod.prodCost < 9 ? 'medium' : 'low'}`;
-            document.getElementById('prodSustain').textContent = `${prod.sustain}/100`;
+            document.getElementById('prodSustain').textContent = `${prod.sustain} ± ${prod.sustainStdev}`;
             document.getElementById('prodSustain').className = `stat-value ${prod.sustain >= 90 ? 'high' : prod.sustain >= 75 ? 'medium' : 'low'}`;
             checkForChanges();
         }
-        
+
         function updateSupplierDetails() {
             const supp = suppliers[document.getElementById('supplierChoice').value];
-            document.getElementById('suppPrice').textContent = `£${supp.price.toFixed(2)}`;
+            document.getElementById('suppPrice').textContent = `£${supp.price.toFixed(2)} ± ${supp.priceStdev}`;
             document.getElementById('suppPrice').className = `stat-value ${supp.price < 8 ? 'high' : supp.price < 9 ? 'medium' : 'low'}`;
-            document.getElementById('suppSustain').textContent = `${supp.sustain}/100`;
+            document.getElementById('suppSustain').textContent = `${supp.sustain} ± ${supp.sustainStdev}`;
             document.getElementById('suppSustain').className = `stat-value ${supp.sustain >= 90 ? 'high' : supp.sustain >= 75 ? 'medium' : 'low'}`;
             checkForChanges();
         }
-        
+
         function updateLogisticsDetails() {
             const log = logistics[document.getElementById('logisticsChoice').value];
-            document.getElementById('logPrice').textContent = `£${log.price.toFixed(2)}`;
+            document.getElementById('logPrice').textContent = `£${log.price.toFixed(2)} ± ${log.priceStdev}`;
             document.getElementById('logPrice').className = `stat-value ${log.price < 8 ? 'high' : log.price < 9 ? 'medium' : 'low'}`;
-            document.getElementById('logSustain').textContent = `${log.sustain}/100`;
+            document.getElementById('logSustain').textContent = `${log.sustain} ± ${log.sustainStdev}`;
             document.getElementById('logSustain').className = `stat-value ${log.sustain >= 90 ? 'high' : log.sustain >= 75 ? 'medium' : 'low'}`;
             checkForChanges();
         }
-        
+
         function updateSliderDisplays() {
-            document.getElementById('productionValue').textContent = `${document.getElementById('production').value} units`;
+            const p = parseInt(document.getElementById('production').value);
+            document.getElementById('productionValue').textContent = `${p} units`;
             document.getElementById('disposalValue').textContent = `£${document.getElementById('disposal').value}`;
+            if (!isRunning) updateBalance(p, series.demand.length ? series.demand[series.demand.length - 1] : DEMAND_MEAN);
         }
-        
+
         function checkForChanges() {
             if (previousSelections.product === null) return;
             const prodSelect = document.getElementById('productChoice');
@@ -773,85 +1020,142 @@
             suppSelect.classList.toggle('changed', suppSelect.value !== previousSelections.supplier);
             logSelect.classList.toggle('changed', logSelect.value !== previousSelections.logistics);
         }
-        
+
+        // draw-balance: block heights scale with production/10 and demand/10
         function updateBalance(production, demand) {
             const maxHeight = 100;
             document.getElementById('productionBar').style.height = `${Math.min((production / 200) * maxHeight, maxHeight)}px`;
             document.getElementById('demandBar').style.height = `${Math.min((demand / 200) * maxHeight, maxHeight)}px`;
             document.getElementById('prodLabel').textContent = Math.round(production);
             document.getElementById('demandLabel').textContent = Math.round(demand);
-            
+
             const diff = production - demand;
             document.getElementById('balanceBeam').style.transform = `translateX(-50%) rotate(${Math.max(-10, Math.min(10, diff / 10))}deg)`;
-            
+
             const status = document.getElementById('balanceStatus');
-            if (Math.abs(diff) < 5) { status.textContent = 'BALANCED'; status.className = 'balance-status balanced'; }
-            else if (diff > 0) { status.textContent = `SURPLUS (+${Math.round(diff)})`; status.className = 'balance-status surplus'; }
-            else { status.textContent = `SHORTAGE (${Math.round(diff)})`; status.className = 'balance-status shortage'; }
+            if (Math.round(production) === Math.round(demand)) { status.textContent = 'BALANCED'; status.className = 'balance-status balanced'; }
+            else if (diff > 0) { status.textContent = `SURPLUS  (production exceeds demand by ${Math.round(diff)})`; status.className = 'balance-status surplus'; }
+            else { status.textContent = `SHORTAGE  (demand exceeds production by ${Math.round(-diff)})`; status.className = 'balance-status shortage'; }
         }
-        
+
+        function updateMonitors(r, label) {
+            document.getElementById('monitorMonth').textContent = label;
+            document.getElementById('mDemand').textContent = fmt(r.demand, 1);
+            document.getElementById('mPrice').textContent = '£' + fmt(r.price);
+            document.getElementById('mRt').textContent = '£' + fmt(r.Rt);
+            document.getElementById('mPt').textContent = '£' + fmt(r.Pt);
+            document.getElementById('mPMt').textContent = fmt(r.PMt * 100, 1) + '%';
+            document.getElementById('mPcost').textContent = fmt(r.totalPcost);
+            document.getElementById('mScost').textContent = fmt(r.totalScost);
+            document.getElementById('mLcost').textContent = fmt(r.totalLcost);
+            document.getElementById('mTcost').textContent = fmt(r.totalCost);
+            document.getElementById('mPmax').textContent = fmt(r.Pmax);
+            document.getElementById('mSmax').textContent = fmt(r.Smax);
+            document.getElementById('mLmax').textContent = fmt(r.Lmax);
+            document.getElementById('mPt').style.color = r.Pt >= 0 ? '#27ae60' : '#e74c3c';
+            document.getElementById('mPMt').style.color = r.PMt >= 0 ? '#27ae60' : '#e74c3c';
+        }
+
+        // ------------------------------------------------------------------
+        // Charts — one per NetLogo plot, plus the annual summaries
+        // ------------------------------------------------------------------
+        const lineOpts = (leftTitle, rightTitle, leftRange) => ({
+            responsive: true, maintainAspectRatio: false, animation: false,
+            interaction: { mode: 'index', intersect: false },
+            plugins: { legend: { position: 'bottom', labels: { font: { size: 9 }, boxWidth: 12 } } },
+            scales: {
+                x: { ticks: { font: { size: 9 }, maxTicksLimit: 12 } },
+                y: { title: { display: !!leftTitle, text: leftTitle, font: { size: 9 } }, ...(leftRange || {}) },
+                y1: { position: 'right', grid: { drawOnChartArea: false }, title: { display: !!rightTitle, text: rightTitle, font: { size: 9 } } }
+            }
+        });
+        const ds = (label, color, axis = 'y', dash) => ({ label, data: [], borderColor: color, backgroundColor: color, tension: 0.25, pointRadius: 2, borderWidth: 2, yAxisID: axis, borderDash: dash });
+
         function initCharts() {
+            // Plot: "Demand Production and Price"
             charts.demand = new Chart(document.getElementById('demandChart'), {
                 type: 'line',
-                data: { labels: [], datasets: [
-                    { label: 'Demand', data: [], borderColor: '#3498db', tension: 0.3, pointRadius: 1 },
-                    { label: 'Production', data: [], borderColor: '#e74c3c', tension: 0.3, pointRadius: 1 },
-                    { label: 'Price', data: [], borderColor: '#f39c12', tension: 0.3, pointRadius: 1, yAxisID: 'y1' }
-                ]},
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { font: { size: 9 } } } },
-                    scales: { y: { beginAtZero: false }, y1: { position: 'right', grid: { drawOnChartArea: false } } } }
+                data: { labels: [], datasets: [ ds('demand', '#3498db'), ds('production', '#e74c3c'), ds('price', '#f39c12', 'y1') ] },
+                options: lineOpts('units', 'price (£)')
             });
-            
-            charts.profit = new Chart(document.getElementById('profitChart'), {
-                type: 'bar',
-                data: { labels: [], datasets: [{ label: 'Profit %', data: [], backgroundColor: [], borderWidth: 2 }] },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
-            });
-            
+
+            // Firm-level FES-t / FSS-t (the inputs of the annual sustainability outputs)
             charts.sustain = new Chart(document.getElementById('sustainChart'), {
                 type: 'line',
-                data: { labels: [], datasets: [
-                    { label: 'Environmental', data: [], borderColor: '#27ae60', tension: 0.3, pointRadius: 1 },
-                    { label: 'Social', data: [], borderColor: '#9b59b6', tension: 0.3, pointRadius: 1 }
-                ]},
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { font: { size: 9 } } } }, scales: { y: { min: 50, max: 100 } } }
+                data: { labels: [], datasets: [ ds('FES-t  environmental', '#27ae60'), ds('FSS-t  social', '#9b59b6') ] },
+                options: { ...lineOpts('score'), scales: { x: { ticks: { font: { size: 9 }, maxTicksLimit: 12 } }, y: { min: 50, max: 100 } } }
             });
-            
+
+            // Plot: "Supplier's performance"
+            charts.supplier = new Chart(document.getElementById('supplierChart'), {
+                type: 'line',
+                data: { labels: [], datasets: [
+                    ds("Supplier's cost", '#e67e22', 'y1'),
+                    ds("Supplier's environmental sustainability", '#27ae60'),
+                    ds("Supplier's social sustainability", '#9b59b6') ] },
+                options: lineOpts('sustainability', 'cost (£)', { min: 50, max: 100 })
+            });
+
+            // Plot: "The firm's performance"
+            charts.firm = new Chart(document.getElementById('firmChart'), {
+                type: 'line',
+                data: { labels: [], datasets: [
+                    ds("Firm's profit margin (%)", '#e67e22', 'y1'),
+                    ds("Firm's environmental sustainability", '#27ae60'),
+                    ds("Firm's social sustainability", '#9b59b6') ] },
+                options: lineOpts('sustainability', 'profit margin (%)', { min: 50, max: 100 })
+            });
+
+            // Plot: "Logistics service provider's performance"
+            charts.logistics = new Chart(document.getElementById('logisticsChart'), {
+                type: 'line',
+                data: { labels: [], datasets: [
+                    ds("Logistics service provider's cost", '#e67e22', 'y1'),
+                    ds("Logistics service provider's environmental sustainability", '#27ae60'),
+                    ds("Logistics service provider's social sustainability", '#9b59b6') ] },
+                options: lineOpts('sustainability', 'cost (£)', { min: 50, max: 100 })
+            });
+
+            // Annual profit margin per year
+            charts.profit = new Chart(document.getElementById('profitChart'), {
+                type: 'bar',
+                data: { labels: [], datasets: [{ label: 'Annual profit margin (%)', data: [], backgroundColor: [], borderWidth: 2 }] },
+                options: { responsive: true, maintainAspectRatio: false, animation: false, plugins: { legend: { display: false } }, scales: { y: { title: { display: true, text: '%', font: { size: 9 } } } } }
+            });
+
+            // NetLogo total-pcost / total-supplier-cost / total-logistics-cost, monthly, stacked
             charts.cost = new Chart(document.getElementById('costChart'), {
                 type: 'bar',
                 data: { labels: [], datasets: [
-                    { label: 'Production', data: [], backgroundColor: '#e74c3c' },
-                    { label: 'Supplier', data: [], backgroundColor: '#9b59b6' },
-                    { label: 'Logistics', data: [], backgroundColor: '#f39c12' }
-                ]},
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { font: { size: 9 } } } }, scales: { x: { stacked: true }, y: { stacked: true } } }
+                    { label: 'Total product cost', data: [], backgroundColor: '#e74c3c' },
+                    { label: 'Total supplier cost', data: [], backgroundColor: '#9b59b6' },
+                    { label: 'Total logistics cost', data: [], backgroundColor: '#f39c12' } ] },
+                options: { responsive: true, maintainAspectRatio: false, animation: false,
+                    plugins: { legend: { position: 'bottom', labels: { font: { size: 9 }, boxWidth: 12 } }, tooltip: { mode: 'index' } },
+                    scales: { x: { stacked: true, ticks: { font: { size: 9 }, maxTicksLimit: 12 } }, y: { stacked: true } } }
             });
         }
-        
+
         function updateCharts() {
-            charts.demand.data.labels = allMonthlyData.labels;
-            charts.demand.data.datasets[0].data = allMonthlyData.demand;
-            charts.demand.data.datasets[1].data = allMonthlyData.production;
-            charts.demand.data.datasets[2].data = allMonthlyData.price;
-            charts.demand.update('none');
-            
-            charts.sustain.data.labels = allMonthlyData.labels;
-            charts.sustain.data.datasets[0].data = allMonthlyData.enviro;
-            charts.sustain.data.datasets[1].data = allMonthlyData.social;
-            charts.sustain.update('none');
-            
+            const s = series;
+            const set = (chart, arrays) => {
+                chart.data.labels = s.labels;
+                arrays.forEach((a, i) => chart.data.datasets[i].data = a);
+                chart.update('none');
+            };
+            set(charts.demand,    [s.demand, s.production, s.price]);
+            set(charts.sustain,   [s.FES, s.FSS]);
+            set(charts.supplier,  [s.suppCost, s.SS1, s.SS2]);
+            set(charts.firm,      [s.PM, s.PS1, s.PS2]);
+            set(charts.logistics, [s.logCost, s.LS1, s.LS2]);
+            set(charts.cost,      [s.totalPcost, s.totalScost, s.totalLcost]);
+
             charts.profit.data.labels = yearlyResults.map((_, i) => `Year ${i + 1}`);
             charts.profit.data.datasets[0].data = yearlyResults.map(r => r.profitMargin);
             charts.profit.data.datasets[0].backgroundColor = yearlyResults.map(r => r.profitMargin > 0 ? 'rgba(39,174,96,0.7)' : 'rgba(231,76,60,0.7)');
             charts.profit.update('none');
-            
-            charts.cost.data.labels = yearlyResults.map((_, i) => `Year ${i + 1}`);
-            charts.cost.data.datasets[0].data = yearlyResults.map(r => r.prodCost);
-            charts.cost.data.datasets[1].data = yearlyResults.map(r => r.suppCost);
-            charts.cost.data.datasets[2].data = yearlyResults.map(r => r.logCost);
-            charts.cost.update('none');
         }
-        
+
         function updateYearSummary() {
             document.querySelectorAll('.year-box').forEach((box, i) => {
                 box.classList.remove('active', 'completed');
@@ -860,111 +1164,121 @@
                 else { box.querySelector('.year-profit').textContent = '--'; }
             });
         }
-        
+
         function updateHistory() {
             const tbody = document.getElementById('historyBody');
             if (yearlyResults.length === 0) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#999;">No data yet</td></tr>'; return; }
             tbody.innerHTML = yearlyResults.map((r, i) => {
                 const changed = i > 0 && (r.product !== yearlyResults[i-1].product || r.supplier !== yearlyResults[i-1].supplier || r.logistics !== yearlyResults[i-1].logistics);
-                return `<tr><td>Year ${i+1}${changed ? '<span class="change-badge"></span>' : ''}</td><td>${products[r.product].name}</td><td>${suppliers[r.supplier].name}</td><td>${logistics[r.logistics].name}</td><td style="color:${r.profitMargin > 0 ? '#27ae60' : '#e74c3c'}">${r.profitMargin.toFixed(1)}%</td><td>${r.enviro.toFixed(1)}</td></tr>`;
+                return `<tr><td>Year ${i+1}${changed ? '<span class="change-badge"></span>' : ''}</td><td>${products[r.product].name}</td><td>${suppliers[r.supplier].name}</td><td>${logistics[r.logistics].name}</td><td style="color:${r.profitMargin > 0 ? '#27ae60' : '#e74c3c'}">${r.profitMargin.toFixed(1)}%</td><td>${r.enviro.toFixed(1)} / ${r.social.toFixed(1)}</td></tr>`;
             }).join('');
         }
-        
+
         function updateCumulativeResults() {
-            if (yearlyResults.length === 0) return;
-            document.getElementById('cumProfit').textContent = `${(yearlyResults.reduce((s,r) => s + r.profitMargin, 0) / yearlyResults.length).toFixed(1)}%`;
-            document.getElementById('cumEnviro').textContent = (yearlyResults.reduce((s,r) => s + r.enviro, 0) / yearlyResults.length).toFixed(1);
-            document.getElementById('cumSocial').textContent = (yearlyResults.reduce((s,r) => s + r.social, 0) / yearlyResults.length).toFixed(1);
-            document.getElementById('cumRevenue').textContent = `£${(yearlyResults.reduce((s,r) => s + r.revenue, 0) / 1000).toFixed(1)}k`;
+            if (cum.n === 0) return;
+            // Same as NetLogo's running totals divided by number of months simulated so far
+            document.getElementById('cumProfit').textContent = `${(cum.PMT * 100 / cum.n).toFixed(1)}%`;
+            document.getElementById('cumEnviro').textContent = (cum.FES / cum.n).toFixed(1);
+            document.getElementById('cumSocial').textContent = (cum.FSS / cum.n).toFixed(1);
+            document.getElementById('cumRevenue').textContent = `£${(yearlyResults.reduce((s, r) => s + r.revenue, 0) / 1000).toFixed(1)}k`;
         }
-        
+
         function getTrend(current, previous) {
             if (previous === null) return { text: '', class: 'neutral' };
             const diff = current - previous;
             if (Math.abs(diff) < 0.5) return { text: '→ No change', class: 'neutral' };
             return diff > 0 ? { text: `↑ +${diff.toFixed(1)}`, class: 'up' } : { text: `↓ ${diff.toFixed(1)}`, class: 'down' };
         }
-        
+
+        // ------------------------------------------------------------------
+        // go: repeat 12 [ calculate-total-cost ]
+        // ------------------------------------------------------------------
         async function runYear() {
             if (isRunning || currentYear > maxYears) return;
             isRunning = true;
-            
+
             document.getElementById('statusDisplay').textContent = `Running Year ${currentYear}...`;
             document.getElementById('statusDisplay').className = 'status-display running';
             document.getElementById('runYearBtn').disabled = true;
             document.getElementById('runAllBtn').disabled = true;
-            
-            const prod = products[document.getElementById('productChoice').value];
-            const supp = suppliers[document.getElementById('supplierChoice').value];
-            const log = logistics[document.getElementById('logisticsChoice').value];
+
+            const prodKey = document.getElementById('productChoice').value;
+            const suppKey = document.getElementById('supplierChoice').value;
+            const logKey  = document.getElementById('logisticsChoice').value;
             const production = parseInt(document.getElementById('production').value);
-            const disposal = parseInt(document.getElementById('disposal').value);
-            
-            const selections = { product: document.getElementById('productChoice').value, supplier: document.getElementById('supplierChoice').value, logistics: document.getElementById('logisticsChoice').value };
-            
-            let yProfit = 0, yEnviro = 0, ySocial = 0, yPrice = 0, yRevenue = 0, yProdCost = 0, ySuppCost = 0, yLogCost = 0;
-            const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-            
+            const d = parseInt(document.getElementById('disposal').value);     // disposal cost (NetLogo: set d 10)
+            const verbose = document.getElementById('verboseLog').checked;
+            const selections = { product: prodKey, supplier: suppKey, logistics: logKey };
+
+            outputPrint(`--- Year ${currentYear}: ${products[prodKey].name} | ${suppliers[suppKey].name} | ${logistics[logKey].name} | production ${production} | d ${d} ---`);
+
+            // Per-year accumulators
+            let y = { PMT: 0, FES: 0, FSS: 0, priceL: 0, revenue: 0, profit: 0 };
+
             for (let m = 0; m < 12; m++) {
-                const demand = Math.max(50, randomNormal(100, 10));
-                const pCost = Math.max(prod.prodCost - 2*prod.prodStdev, randomNormal(prod.prodCost, prod.prodStdev));
-                const pSust = randomNormal(prod.sustain, prod.sustainStdev);
-                const sCost = Math.max(supp.price - 2*supp.priceStdev, randomNormal(supp.price, supp.priceStdev));
-                const sSust = randomNormal(supp.sustain, supp.sustainStdev);
-                const lCost = Math.max(log.price - 2*log.priceStdev, randomNormal(log.price, log.priceStdev));
-                const lSust = randomNormal(log.sustain, log.sustainStdev);
-                
-                const price = (pSust === Math.max(pSust,sSust,lSust) && sSust === Math.max(pSust,sSust,lSust) && lSust === Math.max(pSust,sSust,lSust)) ? 110 : Math.min(pSust,sSust,lSust);
-                const sold = Math.min(demand, production);
-                const revenue = price * sold;
-                const totalCost = production * (pCost + sCost + lCost);
-                const profit = revenue - totalCost - disposal * (production - sold);
-                const profitMargin = (profit / revenue) * 100;
-                const enviro = 0.5*pSust + 0.25*sSust + 0.25*lSust;
-                const social = 0.5*randomNormal(prod.sustain, prod.sustainStdev) + 0.25*randomNormal(supp.sustain, supp.sustainStdev) + 0.25*randomNormal(log.sustain, log.sustainStdev);
-                
-                allMonthlyData.labels.push(`Y${currentYear} ${months[m]}`);
-                allMonthlyData.demand.push(demand);
-                allMonthlyData.production.push(production);
-                allMonthlyData.price.push(price);
-                allMonthlyData.enviro.push(enviro);
-                allMonthlyData.social.push(social);
-                
-                yProfit += profitMargin; yEnviro += enviro; ySocial += social; yPrice += price; yRevenue += revenue;
-                yProdCost += production * pCost; ySuppCost += production * sCost; yLogCost += production * lCost;
-                
-                updateBalance(production, demand);
+                const label = `Y${currentYear} ${months[m]}`;
+                if (verbose) outputPrint(`[month ${counters}]`);
+                const r = simulateMonth(prodKey, suppKey, logKey, production, d, verbose);
+
+                // plotxy counters ...
+                series.labels.push(label);
+                series.demand.push(r.demand);
+                series.production.push(production);
+                series.price.push(r.price);
+                series.FES.push(r.FES);
+                series.FSS.push(r.FSS);
+                series.suppCost.push(r.supplierPriceCurrent);
+                series.SS1.push(r.SS1); series.SS2.push(r.SS2);
+                series.PM.push(r.PMt * 100);
+                series.PS1.push(r.PS1); series.PS2.push(r.PS2);
+                series.logCost.push(r.logisticsPriceCurrent);
+                series.LS1.push(r.LS1); series.LS2.push(r.LS2);
+                series.totalPcost.push(r.totalPcost);
+                series.totalScost.push(r.totalScost);
+                series.totalLcost.push(r.totalLcost);
+
+                y.PMT += r.PMt; y.FES += r.FES; y.FSS += r.FSS; y.priceL += r.price; y.revenue += r.Rt; y.profit += r.Pt;
+                cum.PMT += r.PMt; cum.FES += r.FES; cum.FSS += r.FSS; cum.priceL += r.price; cum.n += 1;
+                counters += 1;
+
+                updateBalance(production, r.demand);
+                updateMonitors(r, label);
                 updateCharts();
-                await new Promise(r => setTimeout(r, 80));
+                flushLog();
+                await new Promise(res => setTimeout(res, 70));
             }
-            
-            const result = { year: currentYear, ...selections, profitMargin: yProfit/12, enviro: yEnviro/12, social: ySocial/12, price: yPrice/12, revenue: yRevenue, prodCost: yProdCost, suppCost: ySuppCost, logCost: yLogCost };
+
+            // Annual outputs (NetLogo output-print block, averaged over the 12 months of this year)
+            const result = { year: currentYear, ...selections,
+                profitMargin: y.PMT * 100 / 12, enviro: y.FES / 12, social: y.FSS / 12, price: y.priceL / 12,
+                revenue: y.revenue, profit: y.profit };
             yearlyResults.push(result);
-            
+
+            outputPrint(`Annual profit margin (in %) : ${fmt(result.profitMargin)}`);
+            outputPrint(`Annual environmental sustainability : ${fmt(result.enviro)}`);
+            outputPrint(`Annual social sustainability : ${fmt(result.social)}`);
+            outputPrint(`Average price : £${fmt(result.price)}`);
+            flushLog();
+
             const prev = yearlyResults.length > 1 ? yearlyResults[yearlyResults.length - 2] : null;
-            document.getElementById('annualProfit').textContent = `${result.profitMargin.toFixed(1)}%`;
-            document.getElementById('annualEnviro').textContent = result.enviro.toFixed(1);
-            document.getElementById('annualSocial').textContent = result.social.toFixed(1);
+            document.getElementById('annualProfit').textContent = `${result.profitMargin.toFixed(2)}%`;
+            document.getElementById('annualEnviro').textContent = result.enviro.toFixed(2);
+            document.getElementById('annualSocial').textContent = result.social.toFixed(2);
             document.getElementById('annualPrice').textContent = `£${result.price.toFixed(2)}`;
-            
+
             if (prev) {
-                const pt = getTrend(result.profitMargin, prev.profitMargin);
-                const et = getTrend(result.enviro, prev.enviro);
-                const st = getTrend(result.social, prev.social);
-                const prt = getTrend(result.price, prev.price);
-                document.getElementById('profitTrend').textContent = pt.text; document.getElementById('profitTrend').className = `trend ${pt.class}`;
-                document.getElementById('enviroTrend').textContent = et.text; document.getElementById('enviroTrend').className = `trend ${et.class}`;
-                document.getElementById('socialTrend').textContent = st.text; document.getElementById('socialTrend').className = `trend ${st.class}`;
-                document.getElementById('priceTrend').textContent = prt.text; document.getElementById('priceTrend').className = `trend ${prt.class}`;
+                const pairs = [['profitTrend', result.profitMargin, prev.profitMargin], ['enviroTrend', result.enviro, prev.enviro],
+                               ['socialTrend', result.social, prev.social], ['priceTrend', result.price, prev.price]];
+                pairs.forEach(([id, a, b]) => { const t = getTrend(a, b); const el = document.getElementById(id); el.textContent = t.text; el.className = `trend ${t.class}`; });
             }
-            
+
             previousSelections = { ...selections };
             updateYearSummary(); updateHistory(); updateCumulativeResults(); updateCharts();
-            
+
             currentYear++;
             document.getElementById('currentYear').textContent = currentYear;
             document.getElementById('runYearNum').textContent = currentYear;
-            
+
             if (currentYear > maxYears) {
                 document.getElementById('statusDisplay').textContent = 'All 5 years complete!';
                 document.getElementById('statusDisplay').className = 'status-display complete';
@@ -978,26 +1292,33 @@
             }
             isRunning = false;
         }
-        
+
         async function runAllYears() {
             while (currentYear <= maxYears) { await runYear(); if (currentYear <= maxYears) await new Promise(r => setTimeout(r, 300)); }
         }
-        
+
         function resetSimulation() {
-            currentYear = 1; yearlyResults = []; allMonthlyData = { labels: [], demand: [], production: [], price: [], enviro: [], social: [] };
+            currentYear = 1; yearlyResults = []; series = emptySeries(); counters = 1;
+            cum = { PMT: 0, FES: 0, FSS: 0, priceL: 0, n: 0 };
             previousSelections = { product: null, supplier: null, logistics: null };
+            logLines.length = 0; logLines.push('observer> setup', 'observer> go'); flushLog();
             document.getElementById('currentYear').textContent = '1';
             document.getElementById('runYearNum').textContent = '1';
             document.getElementById('statusDisplay').textContent = 'Ready to start Year 1';
             document.getElementById('statusDisplay').className = 'status-display ready';
             document.getElementById('runYearBtn').disabled = false;
             document.getElementById('runAllBtn').disabled = false;
-            ['annualProfit','annualEnviro','annualSocial','annualPrice','cumProfit','cumEnviro','cumSocial','cumRevenue'].forEach(id => document.getElementById(id).textContent = id.includes('Price') || id.includes('Revenue') ? '£--' : '--%');
+            ['annualProfit','cumProfit'].forEach(id => document.getElementById(id).textContent = '--%');
+            ['annualEnviro','annualSocial','cumEnviro','cumSocial'].forEach(id => document.getElementById(id).textContent = '--');
+            ['annualPrice','cumRevenue'].forEach(id => document.getElementById(id).textContent = '£--');
             ['profitTrend','enviroTrend','socialTrend','priceTrend'].forEach(id => document.getElementById(id).textContent = '');
+            document.querySelectorAll('.m-value').forEach(el => { el.textContent = '–'; el.style.color = ''; });
+            document.getElementById('monitorMonth').textContent = '–';
             document.querySelectorAll('select').forEach(s => s.classList.remove('changed'));
-            updateYearSummary(); updateHistory(); updateCharts(); updateBalance(100, 100);
+            updateYearSummary(); updateHistory(); updateCharts();
+            updateBalance(parseInt(document.getElementById('production').value), DEMAND_MEAN);
         }
-        
+
         document.addEventListener('DOMContentLoaded', function() {
             initCharts();
             document.getElementById('productChoice').addEventListener('change', updateProductDetails);
@@ -1005,7 +1326,8 @@
             document.getElementById('logisticsChoice').addEventListener('change', updateLogisticsDetails);
             document.getElementById('production').addEventListener('input', updateSliderDisplays);
             document.getElementById('disposal').addEventListener('input', updateSliderDisplays);
-            updateProductDetails(); updateSupplierDetails(); updateLogisticsDetails(); updateSliderDisplays(); updateBalance(100, 100);
+            updateProductDetails(); updateSupplierDetails(); updateLogisticsDetails(); updateSliderDisplays();
+            updateBalance(parseInt(document.getElementById('production').value), DEMAND_MEAN);
         });
     </script>
 
