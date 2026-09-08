@@ -3,716 +3,422 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🍞 Bakery Supply Chain Sustainability Simulator - Multi-Year</title>
+    <title>Bakery Supply Chain Sustainability Simulator - Multi-Year</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        :root {
+            --bg: #f5f2ec;
+            --surface: #ffffff;
+            --border: #e2dcd2;
+            --text: #2f2a25;
+            --muted: #6f675e;
+            --accent: #8a5a2b;
+            --accent-dark: #6e4620;
+            --accent-light: #f4ecdf;
+            --green: #4f7d5a;
+            --blue: #5b6c8f;
+            --amber: #b5772b;
+            --red: #b0453f;
+            --radius: 10px;
         }
-        
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #8B4513 0%, #D2691E 100%);
+            font-family: 'Segoe UI', system-ui, -apple-system, Helvetica, Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
             min-height: 100vh;
-            padding: 20px;
+            padding: 16px 20px;
+            line-height: 1.4;
         }
-        
-        .container {
-            max-width: 1600px;
-            margin: 0 auto;
+
+        .container { max-width: 1750px; margin: 0 auto; }
+
+        /* ---------- header ---------- */
+        .page-head { display: flex; align-items: center; gap: 18px; margin-bottom: 14px; }
+        .page-head-text { flex: 1; min-width: 0; }
+        h1 { font-size: 1.5em; font-weight: 600; color: var(--accent-dark); margin-bottom: 2px; }
+        .subtitle { color: var(--muted); font-size: 0.9em; }
+        .home-link {
+            display: inline-flex; align-items: center; gap: 6px; color: var(--accent-dark); text-decoration: none;
+            background: var(--surface); border: 1px solid var(--border); padding: 8px 14px; border-radius: 20px; font-size: 0.85em; white-space: nowrap;
         }
-        
-        h1 {
-            text-align: center;
-            color: white;
+        .home-link:hover { border-color: var(--accent); }
+        .reading-links { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+        .reading-title { color: var(--muted); font-size: 0.85em; font-weight: 600; margin-right: 4px; white-space: nowrap; }
+        .reading-btn {
+            display: inline-block; padding: 8px 14px; border-radius: 8px; font-size: 0.85em; font-weight: 600;
+            color: var(--accent-dark); background: var(--surface); border: 1px solid var(--border); text-decoration: none; white-space: nowrap;
+        }
+        .reading-btn:hover { border-color: var(--accent); background: var(--accent-light); }
+        .reading-btn:focus-visible, .btn:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+        /* ---------- cards ---------- */
+        .card, .chart-card, .monitor-card, .console-card, .history-card, .balance-container, .output-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+        }
+        .card { padding: 12px 14px; }
+        .card h2, .chart-card h3, .monitor-card h3, .console-card h3, .history-card h3, .output-card h3 {
+            color: var(--accent-dark);
+            font-size: 0.95em;
+            font-weight: 600;
             margin-bottom: 10px;
-            font-size: 2em;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
         }
-        
-        .subtitle {
-            text-align: center;
-            color: rgba(255,255,255,0.9);
-            margin-bottom: 20px;
-            font-size: 1em;
-        }
-        
-        .main-grid {
+        .card h2 { padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+
+        /* ---------- top bar ---------- */
+        .topbar {
             display: grid;
-            grid-template-columns: 380px 1fr;
-            gap: 20px;
-        }
-        
-        @media (max-width: 1200px) {
-            .main-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-        
-        .controls {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-        
-        .card {
-            background: white;
-            border-radius: 12px;
-            padding: 18px;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
-        }
-        
-        .card h2 {
-            color: #8B4513;
-            font-size: 1em;
+            grid-template-columns: 110px repeat(3, minmax(0, 1fr)) minmax(0, 1.05fr) minmax(0, 1.25fr);
+            gap: 12px;
             margin-bottom: 12px;
-            padding-bottom: 8px;
-            border-bottom: 2px solid #f5deb3;
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            align-items: stretch;
         }
-        
+        .topbar .card { display: flex; flex-direction: column; }
         .year-indicator {
-            background: linear-gradient(135deg, #8B4513, #D2691E);
-            color: white;
-            padding: 15px;
-            border-radius: 12px;
+            background: var(--accent);
+            color: #fff;
+            border-radius: var(--radius);
+            padding: 10px 6px;
             text-align: center;
-            margin-bottom: 15px;
+            display: flex; flex-direction: column; justify-content: center;
         }
-        
-        .year-indicator .year-number {
-            font-size: 2.5em;
-            font-weight: bold;
+        .year-indicator .year-number { font-size: 1.5em; font-weight: 600; line-height: 1.1; }
+        .year-indicator .year-label { font-size: 0.78em; opacity: 0.9; }
+
+        select {
+            width: 100%; padding: 9px 10px; border: 1px solid var(--border); border-radius: 8px;
+            font-size: 0.95em; background: var(--surface); color: var(--text); cursor: pointer;
         }
-        
-        .year-indicator .year-label {
-            font-size: 0.9em;
-            opacity: 0.9;
-        }
-        
-        .select-group {
-            margin-bottom: 12px;
-        }
-        
-        .select-group label {
-            display: block;
-            font-size: 0.85em;
-            color: #555;
-            margin-bottom: 5px;
-            font-weight: 600;
-        }
-        
-        .select-group select {
-            width: 100%;
-            padding: 10px;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            font-size: 0.9em;
-            background: #fff;
-            cursor: pointer;
-        }
-        
-        .select-group select:focus {
-            outline: none;
-            border-color: #8B4513;
-        }
-        
-        .select-group select.changed {
-            border-color: #e74c3c;
-            background: #fff5f5;
-        }
-        
-        .option-details {
-            margin-top: 8px;
-            padding: 10px;
-            background: #fdf5e6;
-            border-radius: 8px;
-            font-size: 0.8em;
-        }
-        
-        .option-details .stat {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 4px;
-        }
-        
-        .option-details .stat-label {
-            color: #666;
-        }
-        
-        .option-details .stat-value {
-            font-weight: bold;
-        }
-        
-        .stat-value.high { color: #27ae60; }
-        .stat-value.medium { color: #f39c12; }
-        .stat-value.low { color: #e74c3c; }
-        
-        .slider-group {
-            margin-bottom: 15px;
-        }
-        
-        .slider-group label {
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.85em;
-            color: #555;
-            margin-bottom: 5px;
-        }
-        
-        .slider-group input[type="range"] {
-            width: 100%;
-            height: 8px;
-            border-radius: 4px;
-            -webkit-appearance: none;
-            background: linear-gradient(to right, #f5deb3, #8B4513);
-        }
-        
+        select:focus { outline: none; border-color: var(--accent); }
+        select.changed { border-color: var(--amber); background: var(--accent-light); }
+
+        .option-details { margin-top: 8px; padding: 8px 10px; background: var(--accent-light); border-radius: 8px; font-size: 0.85em; }
+        .option-details .stat { display: flex; justify-content: space-between; margin-bottom: 2px; }
+        .option-details .stat-label { color: var(--muted); }
+        .option-details .stat-value { font-weight: 600; color: var(--text); font-variant-numeric: tabular-nums; }
+
+        .slider-group { margin-bottom: 10px; }
+        .slider-group label { display: flex; justify-content: space-between; font-size: 0.88em; color: var(--muted); margin-bottom: 4px; }
+        .slider-group label span:last-child { color: var(--text); font-weight: 600; }
+        .slider-group input[type="range"] { width: 100%; height: 6px; border-radius: 3px; -webkit-appearance: none; appearance: none; background: var(--border); }
         .slider-group input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: 22px;
-            height: 22px;
-            border-radius: 50%;
-            background: #8B4513;
-            cursor: pointer;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: var(--accent); cursor: pointer; border: 2px solid #fff; box-shadow: 0 0 0 1px var(--border);
         }
-        
-        .btn-group {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-        
+        .slider-group input[type="range"]::-moz-range-thumb { width: 18px; height: 18px; border-radius: 50%; background: var(--accent); cursor: pointer; border: 2px solid #fff; }
+
+        .btn-group { display: flex; gap: 6px; flex-wrap: wrap; }
         .btn {
-            flex: 1;
-            min-width: 100px;
-            padding: 12px;
-            border: none;
-            border-radius: 8px;
-            font-size: 0.9em;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-weight: 600;
+            flex: 1; min-width: 0; padding: 9px 8px; border-radius: 8px; font-size: 0.88em; font-weight: 600; cursor: pointer;
+            border: 1px solid var(--accent); background: var(--surface); color: var(--accent-dark); transition: background 0.15s;
         }
-        
-        .btn-primary {
-            background: linear-gradient(135deg, #27ae60, #2ecc71);
-            color: white;
-        }
-        
-        .btn-primary:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(39, 174, 96, 0.4);
-        }
-        
-        .btn-primary:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-        }
-        
-        .btn-secondary {
-            background: linear-gradient(135deg, #3498db, #2980b9);
-            color: white;
-        }
-        
-        .btn-secondary:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
-        }
-        
-        .btn-reset {
-            background: #e74c3c;
-            color: white;
-        }
-        
-        .btn-reset:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(231, 76, 60, 0.4);
-        }
-        
-        .results-area {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-        
-        .balance-container {
-            background: white;
-            border-radius: 12px;
-            padding: 20px;
-            text-align: center;
-        }
-        
-        .balance-visual {
-            position: relative;
-            height: 180px;
-            margin: 15px 0;
-        }
-        
+        .btn-primary { background: var(--accent); color: #fff; }
+        .btn-primary:hover:not(:disabled) { background: var(--accent-dark); }
+        .btn-secondary:hover:not(:disabled) { background: var(--accent-light); }
+        .btn-reset { border-color: var(--border); color: var(--muted); }
+        .btn-reset:hover { background: var(--bg); }
+        .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+        .status-display { margin-top: 8px; padding: 6px 8px; border-radius: 8px; font-size: 0.85em; text-align: center; border: 1px solid var(--border); color: var(--muted); }
+        .status-display.running { border-color: var(--amber); color: var(--amber); }
+        .status-display.complete { border-color: var(--green); color: var(--green); }
+
+        /* ---------- status row ---------- */
+        .status-row { display: grid; grid-template-columns: 300px 1fr 260px; gap: 12px; margin-bottom: 12px; align-items: stretch; }
+
+        .balance-container { padding: 10px 12px 8px; text-align: center; display: flex; flex-direction: column; justify-content: space-between; }
+        .balance-visual { position: relative; height: 98px; margin: 0 0 6px; }
         .balance-beam {
-            position: absolute;
-            bottom: 40px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 80%;
-            height: 12px;
-            background: linear-gradient(to bottom, #8B4513, #5D3A1A);
-            border-radius: 6px;
-            transform-origin: center;
-            transition: transform 0.5s ease;
+            position: absolute; bottom: 22px; left: 50%; transform: translateX(-50%);
+            width: 80%; height: 8px; background: var(--accent-dark); border-radius: 4px; transform-origin: center; transition: transform 0.4s ease;
         }
-        
         .fulcrum {
-            position: absolute;
-            bottom: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 0;
-            height: 0;
-            border-left: 30px solid transparent;
-            border-right: 30px solid transparent;
-            border-bottom: 40px solid #666;
+            position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 0; height: 0;
+            border-left: 18px solid transparent; border-right: 18px solid transparent; border-bottom: 22px solid #8f867b;
         }
-        
-        .block {
-            position: absolute;
-            bottom: 52px;
-            width: 80px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            transition: all 0.5s ease;
-        }
-        
-        .block.production { left: 15%; }
-        .block.demand { right: 15%; }
-        
-        .block-bar {
-            width: 60px;
-            background: linear-gradient(to top, #c0392b, #e74c3c);
-            border-radius: 5px 5px 0 0;
-            transition: height 0.5s ease;
-        }
-        
-        .block.demand .block-bar {
-            background: linear-gradient(to top, #2980b9, #3498db);
-        }
-        
-        .block-label {
-            margin-top: 8px;
-            font-weight: bold;
-            font-size: 0.85em;
-        }
-        
-        .block.production .block-label { color: #c0392b; }
-        .block.demand .block-label { color: #2980b9; }
-        
-        .balance-status {
-            font-size: 1.1em;
-            font-weight: bold;
-            padding: 8px 16px;
-            border-radius: 20px;
-            display: inline-block;
-        }
-        
-        .balance-status.balanced { background: #d5f5e3; color: #27ae60; }
-        .balance-status.surplus { background: #fadbd8; color: #e74c3c; }
-        .balance-status.shortage { background: #ebf5fb; color: #3498db; }
-        
-        .charts-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 15px;
-        }
-        
-        @media (max-width: 900px) {
-            .charts-grid { grid-template-columns: 1fr; }
-        }
-        
-        .chart-card {
-            background: white;
-            border-radius: 12px;
-            padding: 15px;
-        }
-        
-        .chart-card h3 {
-            color: #8B4513;
-            font-size: 0.9em;
-            margin-bottom: 10px;
-            text-align: center;
-        }
-        
-        .chart-wrapper { height: 220px; }
-        
+        .block { position: absolute; bottom: 30px; width: 70px; display: flex; flex-direction: column; align-items: center; transition: all 0.4s ease; }
+        .block.production { left: 8%; }
+        .block.demand { right: 8%; }
+        .block-bar { width: 44px; border-radius: 4px 4px 0 0; transition: height 0.4s ease; background: var(--accent); }
+        .block.demand .block-bar { background: var(--blue); }
+        .block-label { margin: 0 0 4px; font-weight: 600; font-size: 0.75em; white-space: nowrap; color: var(--muted); }
+        .block-label span { color: var(--text); }
+        .balance-status { font-size: 0.8em; font-weight: 600; padding: 4px 10px; border-radius: 14px; display: inline-block; background: var(--bg); color: var(--muted); }
+        .balance-status.balanced { color: var(--green); }
 
+        .output-card { padding: 12px 14px; }
+        .output-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+        .output-item { text-align: center; padding: 10px 6px; background: var(--accent-light); border-radius: 8px; }
+        .output-item .label { font-size: 0.75em; color: var(--muted); margin-bottom: 4px; }
+        .output-item .value { font-size: 1.35em; font-weight: 600; color: var(--accent-dark); font-variant-numeric: tabular-nums; }
+        .output-item .trend { font-size: 0.8em; margin-top: 3px; }
+        .trend.up { color: var(--green); }
+        .trend.down { color: var(--red); }
+        .trend.neutral { color: var(--muted); }
+
+        .years-card { padding: 10px 12px; }
+        .year-summary { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+        .year-box { background: var(--bg); border-radius: 8px; padding: 6px 2px; text-align: center; border: 1px solid transparent; }
+        .year-box.active { border-color: var(--accent); background: var(--accent-light); }
+        .year-box.completed { background: var(--accent-light); }
+        .year-box .year-num { font-weight: 600; color: var(--accent-dark); font-size: 0.85em; }
+        .year-box .year-profit { font-size: 0.72em; color: var(--muted); }
+
+        /* ---------- charts ---------- */
+        .charts-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 12px; }
         .charts-grid.three { grid-template-columns: repeat(3, 1fr); }
-        @media (max-width: 1400px) { .charts-grid.three { grid-template-columns: 1fr; } }
-        .charts-grid.three .chart-wrapper { height: 240px; }
+        .chart-card { padding: 14px 16px 10px; }
+        .chart-card h3 { text-align: left; }
+        .chart-wrapper { height: 260px; }
+        .charts-grid.three .chart-wrapper { height: 280px; }
 
-        .monitor-card {
-            background: white;
-            border-radius: 12px;
-            padding: 15px;
+        /* ---------- monitors ---------- */
+        .monitor-card { padding: 14px 16px; margin-bottom: 12px; }
+        .monitor-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
+        .monitor { background: var(--bg); border-radius: 8px; padding: 8px 10px; }
+        .monitor .m-label { font-size: 0.78em; color: var(--muted); margin-bottom: 2px; }
+        .monitor .m-value { font-size: 1.05em; font-weight: 600; color: var(--text); font-variant-numeric: tabular-nums; }
+
+        .container > .output-card { margin-bottom: 12px; }
+
+        /* ---------- log ---------- */
+        .console-card { padding: 14px 16px; margin-bottom: 12px; }
+        .console-card h3 { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .console-toggle { font-size: 0.85em; font-weight: normal; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+        #consoleLog {
+            max-height: 260px; overflow-y: auto; margin: 0; padding: 10px 12px;
+            background: var(--bg); border-radius: 8px;
+            font-family: Consolas, 'Courier New', monospace; font-size: 0.82em; line-height: 1.5; color: var(--text); white-space: pre-wrap;
         }
-        .monitor-card h3 {
-            color: #8B4513;
-            font-size: 0.9em;
-            margin-bottom: 10px;
-        }
-        .monitor-grid {
-            display: grid;
-            grid-template-columns: repeat(6, 1fr);
-            gap: 8px;
+
+        /* ---------- history ---------- */
+        .history-card { padding: 14px 16px; margin-bottom: 12px; max-height: 320px; overflow-y: auto; }
+        .history-table { width: 100%; border-collapse: collapse; font-size: 0.88em; }
+        .history-table th { background: var(--accent-light); padding: 8px; text-align: left; font-weight: 600; color: var(--accent-dark); }
+        .history-table td { padding: 8px; border-bottom: 1px solid var(--border); }
+        .change-badge { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--amber); margin-left: 5px; }
+
+        /* ---------- footer ---------- */
+        footer { text-align: center; padding: 20px; margin-top: 10px; color: var(--muted); font-size: 0.85em; }
+        footer .note { background: var(--accent-light); border: 1px solid var(--border); border-radius: 8px; padding: 12px 15px; margin: 0 auto 15px; max-width: 800px; }
+
+        /* ---------- responsive ---------- */
+        @media (max-width: 1400px) { .charts-grid.three { grid-template-columns: 1fr; } }
+        @media (max-width: 1300px) {
+            .topbar { grid-template-columns: 110px repeat(3, 1fr); }
+            .topbar .controls-card, .topbar .card:nth-child(5) { grid-column: span 2; }
+            .status-row { grid-template-columns: 260px 1fr; }
+            .years-card { grid-column: span 2; }
         }
         @media (max-width: 1100px) { .monitor-grid { grid-template-columns: repeat(3, 1fr); } }
-        .monitor {
-            background: #fdf5e6;
-            border: 1px solid #f5deb3;
-            border-radius: 8px;
-            padding: 8px 10px;
-        }
-        .monitor .m-label { font-size: 0.7em; color: #666; margin-bottom: 3px; }
-        .monitor .m-value { font-size: 1em; font-weight: bold; color: #8B4513; font-variant-numeric: tabular-nums; }
-
-        .console-card {
-            background: #1e1e1e;
-            border-radius: 12px;
-            padding: 15px;
-        }
-        .console-card h3 {
-            color: #f5deb3;
-            font-size: 0.9em;
-            margin-bottom: 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-        .console-card h3 code { color: #f39c12; }
-        .console-toggle { font-size: 0.85em; font-weight: normal; color: #bbb; display: flex; align-items: center; gap: 6px; }
-        #consoleLog {
-            max-height: 260px;
-            overflow-y: auto;
-            margin: 0;
-            font-family: Consolas, 'Courier New', monospace;
-            font-size: 0.75em;
-            line-height: 1.45;
-            color: #d4d4d4;
-            white-space: pre-wrap;
-        }
-
-        .output-card {
-            background: linear-gradient(135deg, #2c3e50, #34495e);
-            color: white;
-            border-radius: 12px;
-            padding: 20px;
-        }
-        
-        .output-card h3 {
-            color: #f39c12;
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .output-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 15px;
-        }
-        
+        @media (max-width: 900px) { .charts-grid { grid-template-columns: 1fr; } }
         @media (max-width: 800px) {
+            .topbar, .status-row { grid-template-columns: 1fr; }
+            .topbar .controls-card, .topbar .card:nth-child(5), .years-card { grid-column: auto; }
+            .page-head { flex-direction: column; align-items: flex-start; }
+            .reading-links { justify-content: flex-start; }
             .output-grid { grid-template-columns: repeat(2, 1fr); }
         }
-        
-        .output-item {
-            text-align: center;
-            padding: 15px;
-            background: rgba(255,255,255,0.1);
-            border-radius: 10px;
-        }
-        
-        .output-item .label {
-            font-size: 0.75em;
-            color: #bdc3c7;
-            margin-bottom: 5px;
-        }
-        
-        .output-item .value {
-            font-size: 1.4em;
-            font-weight: bold;
-            color: #f39c12;
-        }
-        
-        .output-item .trend {
-            font-size: 0.8em;
-            margin-top: 5px;
-        }
-        
-        .trend.up { color: #2ecc71; }
-        .trend.down { color: #e74c3c; }
-        .trend.neutral { color: #95a5a6; }
-        
-        .history-card {
-            background: white;
-            border-radius: 12px;
-            padding: 15px;
-            max-height: 300px;
-            overflow-y: auto;
-        }
-        
-        .history-card h3 {
-            color: #8B4513;
-            font-size: 0.95em;
-            margin-bottom: 10px;
-            position: sticky;
-            top: 0;
-            background: white;
-            padding-bottom: 10px;
-        }
-        
-        .history-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.8em;
-        }
-        
-        .history-table th {
-            background: #f5deb3;
-            padding: 8px;
-            text-align: left;
-            position: sticky;
-            top: 35px;
-        }
-        
-        .history-table td {
-            padding: 8px;
-            border-bottom: 1px solid #eee;
-        }
-        
-        .history-table tr:hover { background: #fdf5e6; }
-        
-        .change-badge {
-            display: inline-block;
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: #e74c3c;
-            margin-left: 5px;
-        }
-        
-        .status-display {
-            text-align: center;
-            padding: 10px;
-            border-radius: 8px;
-            margin-top: 10px;
-            font-weight: 600;
-        }
-        
-        .status-display.ready { background: #e8f8f5; color: #1abc9c; }
-        .status-display.running { background: #fef9e7; color: #f39c12; }
-        .status-display.complete { background: #eafaf1; color: #27ae60; }
-        
-        .year-summary {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 10px;
-            margin-top: 15px;
-        }
-        
-        .year-box {
-            background: #f8f9fa;
-            border-radius: 8px;
-            padding: 10px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.2s;
-            border: 2px solid transparent;
-        }
-        
-        .year-box:hover { background: #fdf5e6; }
-        .year-box.active { border-color: #8B4513; background: #fdf5e6; }
-        .year-box.completed { background: #d5f5e3; }
-        .year-box .year-num { font-weight: bold; color: #8B4513; }
-        .year-box .year-profit { font-size: 0.8em; color: #666; }
+        @media (prefers-reduced-motion: reduce) { .balance-beam, .block, .block-bar { transition: none; } }
     </style>
 </head>
 <body>
     <div class="container">
-        <a href="index.html" style="display: inline-flex; align-items: center; gap: 8px; color: white; text-decoration: none; background: rgba(255,255,255,0.15); padding: 10px 20px; border-radius: 25px; font-size: 0.9em; margin-bottom: 15px; transition: background 0.2s;">
-            <span>←</span> <span>Return to Home Page</span>
-        </a>
-        <h1>🍞 Bakery Supply Chain Sustainability Simulator</h1>
-        <p class="subtitle">Each year runs 12 monthly rounds of the NetLogo model. Change your product, supplier and logistics choices between years to see the long-term impact on profit and sustainability</p>
-        
-        <div class="main-grid">
-            <div class="controls">
-                <div class="year-indicator">
-                    <div class="year-label">Currently Planning</div>
-                    <div class="year-number">Year <span id="currentYear">1</span></div>
-                    <div class="year-label">of <span id="totalYears">5</span> years</div>
+        <div class="page-head">
+            <a href="index.html" class="home-link"><span>←</span> <span>Home</span></a>
+            <div class="page-head-text">
+                <h1>Bakery Supply Chain Sustainability Simulator</h1>
+                <p class="subtitle">Each year runs 12 monthly rounds. Change your product, supplier and logistics choices between years to see the long-term impact on profit and sustainability.</p>
+            </div>
+            <!-- Reading materials: replace each href with your link (add or remove <a> lines as needed) -->
+            <div class="reading-links">
+                <span class="reading-title">Reading materials</span>
+                <a class="reading-btn" href="#" target="_blank" rel="noopener">Reading 1</a>
+                <a class="reading-btn" href="#" target="_blank" rel="noopener">Reading 2</a>
+                <a class="reading-btn" href="#" target="_blank" rel="noopener">Reading 3</a>
+            </div>
+        </div>
+
+        <!-- ===== Top bar: all decisions and controls ===== -->
+        <div class="topbar">
+            <div class="year-indicator">
+                <div class="year-label">Planning</div>
+                <div class="year-number">Year <span id="currentYear">1</span></div>
+                <div class="year-label">of <span id="totalYears">5</span></div>
+            </div>
+
+            <div class="card">
+                <h2>Product</h2>
+                <select id="productChoice">
+                    <option value="golden">Golden Crust Classic</option>
+                    <option value="harvest">Harvest Grain Loaf</option>
+                    <option value="sunrise">Sunrise Sourdough</option>
+                    <option value="honey">Honey Wheat Harmony</option>
+                    <option value="rye">Rye & Shine</option>
+                </select>
+                <div class="option-details">
+                    <div class="stat"><span class="stat-label">Production cost</span><span class="stat-value" id="prodCost">£7.00</span></div>
+                    <div class="stat"><span class="stat-label">Sustainability</span><span class="stat-value" id="prodSustain">70</span></div>
                 </div>
-                
-                <div class="card">
-                    <h2>🥖 Product Selection</h2>
-                    <div class="select-group">
-                        <label>Choose Bread Type</label>
-                        <select id="productChoice">
-                            <option value="golden">Golden Crust Classic</option>
-                            <option value="harvest">Harvest Grain Loaf</option>
-                            <option value="sunrise">Sunrise Sourdough</option>
-                            <option value="honey">Honey Wheat Harmony</option>
-                            <option value="rye">Rye & Shine</option>
-                        </select>
-                        <div class="option-details">
-                            <div class="stat"><span class="stat-label">Production Cost:</span><span class="stat-value" id="prodCost">£7.00</span></div>
-                            <div class="stat"><span class="stat-label">Sustainability Score:</span><span class="stat-value" id="prodSustain">70/100</span></div>
-                        </div>
-                    </div>
+            </div>
+
+            <div class="card">
+                <h2>Supplier</h2>
+                <select id="supplierChoice">
+                    <option value="golden-grain">Golden Grain Mills</option>
+                    <option value="harvest-hearth">Harvest & Hearth Flour Co.</option>
+                    <option value="pure-field">Pure-Field Grains</option>
+                    <option value="millstone">Millstone Select</option>
+                    <option value="bakers-root">Bakers' Root Supply</option>
+                </select>
+                <div class="option-details">
+                    <div class="stat"><span class="stat-label">Price</span><span class="stat-value" id="suppPrice">£7.00</span></div>
+                    <div class="stat"><span class="stat-label">Sustainability</span><span class="stat-value" id="suppSustain">70</span></div>
                 </div>
-                
-                <div class="card">
-                    <h2>🌾 Supplier Selection</h2>
-                    <div class="select-group">
-                        <label>Choose Flour Supplier</label>
-                        <select id="supplierChoice">
-                            <option value="golden-grain">Golden Grain Mills</option>
-                            <option value="harvest-hearth">Harvest & Hearth Flour Co.</option>
-                            <option value="pure-field">Pure-Field Grains</option>
-                            <option value="millstone">Millstone Select</option>
-                            <option value="bakers-root">Bakers' Root Supply</option>
-                        </select>
-                        <div class="option-details">
-                            <div class="stat"><span class="stat-label">Price:</span><span class="stat-value" id="suppPrice">£7.00</span></div>
-                            <div class="stat"><span class="stat-label">Sustainability Score:</span><span class="stat-value" id="suppSustain">70/100</span></div>
-                        </div>
-                    </div>
+            </div>
+
+            <div class="card">
+                <h2>Logistics</h2>
+                <select id="logisticsChoice">
+                    <option value="fresh-route">Fresh-Route Logistics</option>
+                    <option value="crate-freight">Crate & Freight Co.</option>
+                    <option value="swift-bite">Swift-Bite Transport</option>
+                    <option value="daily-haul">Daily-Haul Distribution</option>
+                    <option value="urban-crate">Urban-Crate Express</option>
+                </select>
+                <div class="option-details">
+                    <div class="stat"><span class="stat-label">Price</span><span class="stat-value" id="logPrice">£7.00</span></div>
+                    <div class="stat"><span class="stat-label">Sustainability</span><span class="stat-value" id="logSustain">70</span></div>
                 </div>
-                
-                <div class="card">
-                    <h2>🚚 Logistics Selection</h2>
-                    <div class="select-group">
-                        <label>Choose Logistics Provider</label>
-                        <select id="logisticsChoice">
-                            <option value="fresh-route">Fresh-Route Logistics</option>
-                            <option value="crate-freight">Crate & Freight Co.</option>
-                            <option value="swift-bite">Swift-Bite Transport</option>
-                            <option value="daily-haul">Daily-Haul Distribution</option>
-                            <option value="urban-crate">Urban-Crate Express</option>
-                        </select>
-                        <div class="option-details">
-                            <div class="stat"><span class="stat-label">Price:</span><span class="stat-value" id="logPrice">£7.00</span></div>
-                            <div class="stat"><span class="stat-label">Sustainability Score:</span><span class="stat-value" id="logSustain">70/100</span></div>
-                        </div>
-                    </div>
+            </div>
+
+            <div class="card">
+                <h2>Production</h2>
+                <div class="slider-group">
+                    <label><span>Quantity</span><span id="productionValue">100 units</span></label>
+                    <input type="range" id="production" min="50" max="200" value="100" step="5">
                 </div>
-                
-                <div class="card">
-                    <h2>⚙️ Production Settings</h2>
-                    <div class="slider-group">
-                        <label><span>Production Quantity</span><span id="productionValue">100 units</span></label>
-                        <input type="range" id="production" min="50" max="200" value="100" step="5">
-                    </div>
-                    <div class="slider-group">
-                        <label><span>Disposal Cost per Unit</span><span id="disposalValue">£10</span></label>
-                        <input type="range" id="disposal" min="5" max="20" value="10" step="1">
-                    </div>
+                <div class="slider-group">
+                    <label><span>Disposal cost / unit</span><span id="disposalValue">£10</span></label>
+                    <input type="range" id="disposal" min="5" max="20" value="10" step="1">
                 </div>
-                
-                <div class="card">
-                    <h2>▶️ Simulation Controls</h2>
-                    <div class="btn-group">
-                        <button class="btn btn-primary" id="runYearBtn" onclick="runYear()">Run Year <span id="runYearNum">1</span></button>
-                        <button class="btn btn-secondary" id="runAllBtn" onclick="runAllYears()">Run All 5 Years</button>
-                    </div>
-                    <div class="btn-group" style="margin-top: 10px;">
-                        <button class="btn btn-reset" onclick="resetSimulation()">Reset All</button>
-                    </div>
-                    <div class="status-display ready" id="statusDisplay">Ready to start Year 1</div>
+            </div>
+
+            <div class="card controls-card">
+                <h2>Run</h2>
+                <div class="btn-group">
+                    <button class="btn btn-primary" id="runYearBtn" onclick="runYear()">Run Year <span id="runYearNum">1</span></button>
+                    <button class="btn btn-secondary" id="runAllBtn" onclick="runAllYears()">Run All 5</button>
+                    <button class="btn btn-reset" onclick="resetSimulation()">Reset</button>
                 </div>
-                
-                <div class="card">
-                    <h2>📅 Year Overview (click to see details)</h2>
-                    <div class="year-summary" id="yearSummary">
-                        <div class="year-box active" data-year="1"><div class="year-num">Y1</div><div class="year-profit">--</div></div>
-                        <div class="year-box" data-year="2"><div class="year-num">Y2</div><div class="year-profit">--</div></div>
-                        <div class="year-box" data-year="3"><div class="year-num">Y3</div><div class="year-profit">--</div></div>
-                        <div class="year-box" data-year="4"><div class="year-num">Y4</div><div class="year-profit">--</div></div>
-                        <div class="year-box" data-year="5"><div class="year-num">Y5</div><div class="year-profit">--</div></div>
+                <div class="status-display ready" id="statusDisplay">Ready to start Year 1</div>
+            </div>
+        </div>
+
+        <!-- ===== Second row: compact scale, current-year results, year overview ===== -->
+        <div class="status-row">
+            <div class="balance-container">
+                <div class="balance-visual">
+                    <div class="block production">
+                        <div class="block-label">Production <span id="prodLabel">100</span></div>
+                        <div class="block-bar" id="productionBar" style="height: 50px;"></div>
+                    </div>
+                    <div class="block demand">
+                        <div class="block-label">Demand <span id="demandLabel">100</span></div>
+                        <div class="block-bar" id="demandBar" style="height: 50px;"></div>
+                    </div>
+                    <div class="balance-beam" id="balanceBeam"></div>
+                    <div class="fulcrum"></div>
+                </div>
+                <div class="balance-status balanced" id="balanceStatus">BALANCED</div>
+            </div>
+
+            <div class="output-card">
+                <h3>Current Year Results</h3>
+                <div class="output-grid">
+                    <div class="output-item">
+                        <div class="label">Annual profit margin</div>
+                        <div class="value" id="annualProfit">--%</div>
+                        <div class="trend neutral" id="profitTrend"></div>
+                    </div>
+                    <div class="output-item">
+                        <div class="label">Annual environmental sustainability</div>
+                        <div class="value" id="annualEnviro">--</div>
+                        <div class="trend neutral" id="enviroTrend"></div>
+                    </div>
+                    <div class="output-item">
+                        <div class="label">Annual social sustainability</div>
+                        <div class="value" id="annualSocial">--</div>
+                        <div class="trend neutral" id="socialTrend"></div>
+                    </div>
+                    <div class="output-item">
+                        <div class="label">Average price</div>
+                        <div class="value" id="annualPrice">£--</div>
+                        <div class="trend neutral" id="priceTrend"></div>
                     </div>
                 </div>
             </div>
-            
-            <div class="results-area">
-                <div class="balance-container">
-                    <h3 style="color: #8B4513; margin-bottom: 10px;">⚖️ Supply & Demand Balance</h3>
-                    <div class="balance-visual">
-                        <div class="block production">
-                            <div class="block-bar" id="productionBar" style="height: 100px;"></div>
-                            <div class="block-label">Production: <span id="prodLabel">100</span></div>
-                        </div>
-                        <div class="block demand">
-                            <div class="block-bar" id="demandBar" style="height: 100px;"></div>
-                            <div class="block-label">Demand: <span id="demandLabel">100</span></div>
-                        </div>
-                        <div class="balance-beam" id="balanceBeam"></div>
-                        <div class="fulcrum"></div>
-                    </div>
-                    <div class="balance-status balanced" id="balanceStatus">BALANCED</div>
-                </div>
-                
-                <div class="charts-grid">
-                    <div class="chart-card">
-                        <h3>📈 Demand, Production &amp; Price</h3>
-                        <div class="chart-wrapper"><canvas id="demandChart"></canvas></div>
-                    </div>
-                    <div class="chart-card">
-                        <h3>🌱 Firm's Overall Sustainability (FES-t &amp; FSS-t)</h3>
-                        <div class="chart-wrapper"><canvas id="sustainChart"></canvas></div>
-                    </div>
-                </div>
 
-                <div class="charts-grid three">
-                    <div class="chart-card">
-                        <h3>🌾 Supplier's Performance</h3>
-                        <div class="chart-wrapper"><canvas id="supplierChart"></canvas></div>
-                    </div>
-                    <div class="chart-card">
-                        <h3>🏭 The Firm's Performance</h3>
-                        <div class="chart-wrapper"><canvas id="firmChart"></canvas></div>
-                    </div>
-                    <div class="chart-card">
-                        <h3>🚚 Logistics Service Provider's Performance</h3>
-                        <div class="chart-wrapper"><canvas id="logisticsChart"></canvas></div>
-                    </div>
+            <div class="card years-card">
+                <h2>Years</h2>
+                <div class="year-summary" id="yearSummary">
+                    <div class="year-box active" data-year="1"><div class="year-num">Y1</div><div class="year-profit">--</div></div>
+                    <div class="year-box" data-year="2"><div class="year-num">Y2</div><div class="year-profit">--</div></div>
+                    <div class="year-box" data-year="3"><div class="year-num">Y3</div><div class="year-profit">--</div></div>
+                    <div class="year-box" data-year="4"><div class="year-num">Y4</div><div class="year-profit">--</div></div>
+                    <div class="year-box" data-year="5"><div class="year-num">Y5</div><div class="year-profit">--</div></div>
                 </div>
+            </div>
+        </div>
 
-                <div class="charts-grid">
-                    <div class="chart-card">
-                        <h3>💰 Annual Profit Margin by Year</h3>
-                        <div class="chart-wrapper"><canvas id="profitChart"></canvas></div>
-                    </div>
-                    <div class="chart-card">
-                        <h3>💷 Combined Cost per Month (sustainability + price) × quantity</h3>
-                        <div class="chart-wrapper"><canvas id="costChart"></canvas></div>
-                    </div>
-                </div>
+        <!-- ===== Charts ===== -->
+        <div class="charts-grid">
+            <div class="chart-card">
+                <h3>Demand, Production &amp; Price</h3>
+                <div class="chart-wrapper"><canvas id="demandChart"></canvas></div>
+            </div>
+            <div class="chart-card">
+                <h3>Firm's Overall Sustainability</h3>
+                <div class="chart-wrapper"><canvas id="sustainChart"></canvas></div>
+            </div>
+        </div>
 
+        <div class="charts-grid three">
+            <div class="chart-card">
+                <h3>Supplier's Performance</h3>
+                <div class="chart-wrapper"><canvas id="supplierChart"></canvas></div>
+            </div>
+            <div class="chart-card">
+                <h3>The Firm's Performance</h3>
+                <div class="chart-wrapper"><canvas id="firmChart"></canvas></div>
+            </div>
+            <div class="chart-card">
+                <h3>Logistics Service Provider's Performance</h3>
+                <div class="chart-wrapper"><canvas id="logisticsChart"></canvas></div>
+            </div>
+        </div>
+
+        <div class="charts-grid">
+            <div class="chart-card">
+                <h3>Annual Profit Margin by Year</h3>
+                <div class="chart-wrapper"><canvas id="profitChart"></canvas></div>
+            </div>
+            <div class="chart-card">
+                <h3>Combined Cost per Month (sustainability + price) × quantity</h3>
+                <div class="chart-wrapper"><canvas id="costChart"></canvas></div>
+            </div>
+        </div>
                 <div class="monitor-card">
-                    <h3>🔢 Monitors — current month (<span id="monitorMonth">–</span>)</h3>
+                    <h3>Monitors — current month (<span id="monitorMonth">–</span>)</h3>
                     <div class="monitor-grid">
                         <div class="monitor"><div class="m-label">Demand</div><div class="m-value" id="mDemand">–</div></div>
                         <div class="monitor"><div class="m-label">Price</div><div class="m-value" id="mPrice">–</div></div>
-                        <div class="monitor"><div class="m-label">Revenue R-t</div><div class="m-value" id="mRt">–</div></div>
-                        <div class="monitor"><div class="m-label">Profit P-t</div><div class="m-value" id="mPt">–</div></div>
-                        <div class="monitor"><div class="m-label">Profit margin PM-t</div><div class="m-value" id="mPMt">–</div></div>
+                        <div class="monitor"><div class="m-label">Revenue</div><div class="m-value" id="mRt">–</div></div>
+                        <div class="monitor"><div class="m-label">Profit</div><div class="m-value" id="mPt">–</div></div>
+                        <div class="monitor"><div class="m-label">Profit margin</div><div class="m-value" id="mPMt">–</div></div>
                         <div class="monitor"><div class="m-label">Total product cost</div><div class="m-value" id="mPcost">–</div></div>
                         <div class="monitor"><div class="m-label">Total supplier cost</div><div class="m-value" id="mScost">–</div></div>
                         <div class="monitor"><div class="m-label">Total logistics cost</div><div class="m-value" id="mLcost">–</div></div>
@@ -724,33 +430,7 @@
                 </div>
 
                 <div class="output-card">
-                    <h3>📊 Current Year Results (NetLogo output)</h3>
-                    <div class="output-grid">
-                        <div class="output-item">
-                            <div class="label">Annual profit margin (in %)</div>
-                            <div class="value" id="annualProfit">--%</div>
-                            <div class="trend neutral" id="profitTrend"></div>
-                        </div>
-                        <div class="output-item">
-                            <div class="label">Annual environmental sustainability</div>
-                            <div class="value" id="annualEnviro">--</div>
-                            <div class="trend neutral" id="enviroTrend"></div>
-                        </div>
-                        <div class="output-item">
-                            <div class="label">Annual social sustainability</div>
-                            <div class="value" id="annualSocial">--</div>
-                            <div class="trend neutral" id="socialTrend"></div>
-                        </div>
-                        <div class="output-item">
-                            <div class="label">Average price</div>
-                            <div class="value" id="annualPrice">£--</div>
-                            <div class="trend neutral" id="priceTrend"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="output-card" style="background: linear-gradient(135deg, #1a5276, #2874a6);">
-                    <h3>📈 Cumulative Results (All Years)</h3>
+                    <h3>Cumulative Results (All Years)</h3>
                     <div class="output-grid">
                         <div class="output-item">
                             <div class="label">Avg Profit Margin</div>
@@ -772,15 +452,14 @@
                 </div>
 
                 <div class="console-card">
-                    <h3><span>🖥️ Command Center (NetLogo <code>show</code> / <code>output-print</code> log)</span>
+                    <h3><span>Simulation Log</span>
                         <label class="console-toggle"><input type="checkbox" id="verboseLog" checked> monthly detail</label>
                     </h3>
-                    <pre id="consoleLog">observer&gt; setup
-observer&gt; go</pre>
+                    <pre id="consoleLog">Simulation ready. Run a year to see the monthly calculations here.</pre>
                 </div>
 
                 <div class="history-card">
-                    <h3>📋 Decision History (🔴 = selection changed from previous year)</h3>
+                    <h3>Decision History (dot = selection changed from previous year)</h3>
                     <table class="history-table">
                         <thead>
                             <tr><th>Year</th><th>Product</th><th>Supplier</th><th>Logistics</th><th>Profit</th><th>Sustain.</th></tr>
@@ -790,13 +469,11 @@ observer&gt; go</pre>
                         </tbody>
                     </table>
                 </div>
-            </div>
-        </div>
     </div>
 
     <script>
         // ------------------------------------------------------------------
-        // Parameters — identical to the NetLogo `setup` procedure
+        // Model parameters (mean and standard deviation for each option)
         // ------------------------------------------------------------------
         const products = {
             'golden':  { name: 'Golden Crust Classic', prodCost: 7,   prodStdev: 2,   sustain: 70, sustainStdev: 10 },
@@ -830,8 +507,8 @@ observer&gt; go</pre>
         let isRunning = false;
         let previousSelections = { product: null, supplier: null, logistics: null };
         let yearlyResults = [];
-        let counters = 1;                                // NetLogo `counters` (x-axis of every plotxy)
-        // Cumulative accumulators across all years, like NetLogo's PMT-tt / FES-tt / FSS-tt / priceL
+        let monthCounter = 1;                            // running month number across all years
+        // Cumulative accumulators across all years
         let cum = { PMT: 0, FES: 0, FSS: 0, priceL: 0, n: 0 };
         let series = null;
         let charts = {};
@@ -854,30 +531,30 @@ observer&gt; go</pre>
             while (v === 0) v = Math.random();
             return mean + stdev * Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
         }
-        // max list (random-normal m sd) (m - 2 * sd)  — the floored price/production draw used in NetLogo
+        // Normal draw floored at mean - 2 sd (used for prices and production cost)
         function flooredNormal(mean, stdev) {
             return Math.max(randomNormal(mean, stdev), mean - 2 * stdev);
         }
         const fmt = (x, n = 2) => (Math.round(x * 10 ** n) / 10 ** n).toFixed(n);
 
         // ------------------------------------------------------------------
-        // Command-center log (mirrors NetLogo `show` and `output-print`)
+        // Simulation log
         // ------------------------------------------------------------------
-        const logLines = ['observer> setup', 'observer> go'];
-        function show(msg) { logLines.push('observer: "' + msg + '"'); }
+        const logLines = [];
+        function show(msg) { logLines.push('  ' + msg); }
         function outputPrint(msg) { logLines.push(msg); }
         function flushLog() {
             const pre = document.getElementById('consoleLog');
-            if (logLines.length > 4000) logLines.splice(2, logLines.length - 4000);
-            pre.textContent = logLines.join('\n');
+            if (logLines.length > 4000) logLines.splice(0, logLines.length - 4000);
+            pre.textContent = logLines.length ? logLines.join('\n') : 'Simulation ready. Run a year to see the monthly calculations here.';
             pre.scrollTop = pre.scrollHeight;
         }
 
         // ------------------------------------------------------------------
-        // One month = one call of NetLogo `calculate-total-cost`
+        // Simulate one month
         // ------------------------------------------------------------------
         function simulateMonth(prodKey, suppKey, logKey, production, d, verbose) {
-            // ---- generate-random-costs ------------------------------------
+            // ---- random draws for this month --------------------------------
             const demand = randomNormal(DEMAND_MEAN, DEMAND_STDEV);
 
             // Every product / supplier / provider gets a fresh draw each month
@@ -887,22 +564,22 @@ observer&gt; go</pre>
                 const p = products[k];
                 const sust = randomNormal(p.sustain, p.sustainStdev);
                 const cost = flooredNormal(p.prodCost, p.prodStdev);
-                P[k] = { sust, cost, combined: sust + cost };          // generated-cost-X
+                P[k] = { sust, cost, combined: sust + cost };
             }
             for (const k in suppliers) {
                 const s = suppliers[k];
                 const sust = randomNormal(s.sustain, s.sustainStdev);
                 const price = flooredNormal(s.price, s.priceStdev);
-                S[k] = { sust, price, combined: sust + price };        // cost-X
+                S[k] = { sust, price, combined: sust + price };
             }
             for (const k in logistics) {
                 const l = logistics[k];
                 const sust = randomNormal(l.sustain, l.sustainStdev);
                 const price = flooredNormal(l.price, l.priceStdev);
-                L[k] = { sust, price, combined: sust + price };        // cost-X
+                L[k] = { sust, price, combined: sust + price };
             }
 
-            // Independent draws for the performance plots (PS-t1/2, SS-t1/2, LS-t1/2)
+            // Independent environmental (1) and social (2) draws for the performance charts
             const prod = products[prodKey], supp = suppliers[suppKey], logi = logistics[logKey];
             const PS1 = randomNormal(prod.sustain, prod.sustainStdev);
             const PS2 = randomNormal(prod.sustain, prod.sustainStdev);
@@ -912,16 +589,15 @@ observer&gt; go</pre>
             const LS2 = randomNormal(logi.sustain, logi.sustainStdev);
 
             // Chosen option's current-month values
-            const supplierSustCurrent  = S[suppKey].sust;    // Supplier-sustainable-current-cost
-            const supplierPriceCurrent = S[suppKey].price;   // Supplier-price-current-cost
-            const logisticsSustCurrent  = L[logKey].sust;    // Logistics-sustainable-current-cost
-            const logisticsPriceCurrent = L[logKey].price;   // Logistics-price-current-cost
-
-            // ---- calculate-total-cost --------------------------------------
-            const qty = production;                          // qty-<chosen> = production, others 0
-            const totalPcost = qty * P[prodKey].combined;    // total-pcost
-            const totalScost = S[suppKey].combined * qty;    // total-supplier-cost
-            const totalLcost = L[logKey].combined * qty;     // total-logistics-cost
+            const supplierSustCurrent  = S[suppKey].sust;
+            const supplierPriceCurrent = S[suppKey].price;
+            const logisticsSustCurrent  = L[logKey].sust;
+            const logisticsPriceCurrent = L[logKey].price;
+            // ---- cost totals ------------------------------------------------
+            const qty = production;
+            const totalPcost = qty * P[prodKey].combined;
+            const totalScost = S[suppKey].combined * qty;
+            const totalLcost = L[logKey].combined * qty;
             const totalCost  = totalLcost + totalScost + totalPcost;
 
             // finding max sustainable value (over ALL five options in each tier)
@@ -930,9 +606,8 @@ observer&gt; go</pre>
             const Pmax = Math.max(...Object.values(P).map(o => o.sust));
 
             // weighted averages — with a single product these equal the chosen product's draws
-            const productSustCurrent  = P[prodKey].sust;     // product-sustainable-current-cost
-            const productPriceCurrent = P[prodKey].cost;     // product-price-current-cost
-
+            const productSustCurrent  = P[prodKey].sust;
+            const productPriceCurrent = P[prodKey].cost;
             // pricing rule
             const price = (logisticsSustCurrent === Lmax && supplierSustCurrent === Smax && productSustCurrent === Pmax)
                 ? MAX_PRICE
@@ -949,22 +624,22 @@ observer&gt; go</pre>
             const FSS = 0.5 * PS2 + 0.25 * SS2 + 0.25 * LS2;
 
             if (verbose) {
-                for (const k in suppliers) show(suppliers[k].name + ' - Combined Cost: ' + S[k].combined);
-                for (const k in logistics) show(logistics[k].name + ' - Combined Cost: ' + L[k].combined);
-                show('Total Product Cost: ' + totalPcost);
-                show('Total supplier  Cost: ' + totalScost);
-                show('Total logistics  Cost: ' + totalLcost);
-                show('Total sustainability  Cost: ' + totalCost);
-                show('Max logistics  Cost: ' + Lmax);
-                show('Max supplier  Cost: ' + Smax);
-                show('Max product  Cost: ' + Pmax);
-                show('Max price  Cost: ' + price);
-                show('Logistics-sustainable-current-cost: ' + logisticsSustCurrent);
-                show('Supplier-sustainable-current-cost: ' + supplierSustCurrent);
-                show('product-sustainable-current-cost: ' + productSustCurrent);
-                show('R-t: ' + Rt);
-                show('P-t: ' + Pt);
-                show('PM-t: ' + PMt);
+                for (const k in suppliers) show(suppliers[k].name + ' - combined cost: ' + fmt(S[k].combined));
+                for (const k in logistics) show(logistics[k].name + ' - combined cost: ' + fmt(L[k].combined));
+                show('Total product cost: £' + fmt(totalPcost));
+                show('Total supplier cost: £' + fmt(totalScost));
+                show('Total logistics cost: £' + fmt(totalLcost));
+                show('Total combined cost: £' + fmt(totalCost));
+                show('Best logistics sustainability this month: ' + fmt(Lmax));
+                show('Best supplier sustainability this month: ' + fmt(Smax));
+                show('Best product sustainability this month: ' + fmt(Pmax));
+                show('Price: £' + fmt(price));
+                show('Your logistics sustainability: ' + fmt(logisticsSustCurrent));
+                show('Your supplier sustainability: ' + fmt(supplierSustCurrent));
+                show('Your product sustainability: ' + fmt(productSustCurrent));
+                show('Revenue: £' + fmt(Rt));
+                show('Profit: £' + fmt(Pt));
+                show('Profit margin: ' + fmt(PMt * 100, 1) + '%');
             }
 
             return { demand, price, sold, Rt, Pt, PMt, FES, FSS,
@@ -980,27 +655,27 @@ observer&gt; go</pre>
         function updateProductDetails() {
             const prod = products[document.getElementById('productChoice').value];
             document.getElementById('prodCost').textContent = `£${prod.prodCost.toFixed(2)} ± ${prod.prodStdev}`;
-            document.getElementById('prodCost').className = `stat-value ${prod.prodCost < 8 ? 'high' : prod.prodCost < 9 ? 'medium' : 'low'}`;
+            document.getElementById('prodCost').className = 'stat-value';
             document.getElementById('prodSustain').textContent = `${prod.sustain} ± ${prod.sustainStdev}`;
-            document.getElementById('prodSustain').className = `stat-value ${prod.sustain >= 90 ? 'high' : prod.sustain >= 75 ? 'medium' : 'low'}`;
+            document.getElementById('prodSustain').className = 'stat-value';
             checkForChanges();
         }
 
         function updateSupplierDetails() {
             const supp = suppliers[document.getElementById('supplierChoice').value];
             document.getElementById('suppPrice').textContent = `£${supp.price.toFixed(2)} ± ${supp.priceStdev}`;
-            document.getElementById('suppPrice').className = `stat-value ${supp.price < 8 ? 'high' : supp.price < 9 ? 'medium' : 'low'}`;
+            document.getElementById('suppPrice').className = 'stat-value';
             document.getElementById('suppSustain').textContent = `${supp.sustain} ± ${supp.sustainStdev}`;
-            document.getElementById('suppSustain').className = `stat-value ${supp.sustain >= 90 ? 'high' : supp.sustain >= 75 ? 'medium' : 'low'}`;
+            document.getElementById('suppSustain').className = 'stat-value';
             checkForChanges();
         }
 
         function updateLogisticsDetails() {
             const log = logistics[document.getElementById('logisticsChoice').value];
             document.getElementById('logPrice').textContent = `£${log.price.toFixed(2)} ± ${log.priceStdev}`;
-            document.getElementById('logPrice').className = `stat-value ${log.price < 8 ? 'high' : log.price < 9 ? 'medium' : 'low'}`;
+            document.getElementById('logPrice').className = 'stat-value';
             document.getElementById('logSustain').textContent = `${log.sustain} ± ${log.sustainStdev}`;
-            document.getElementById('logSustain').className = `stat-value ${log.sustain >= 90 ? 'high' : log.sustain >= 75 ? 'medium' : 'low'}`;
+            document.getElementById('logSustain').className = 'stat-value';
             checkForChanges();
         }
 
@@ -1052,87 +727,96 @@ observer&gt; go</pre>
             document.getElementById('mPmax').textContent = fmt(r.Pmax);
             document.getElementById('mSmax').textContent = fmt(r.Smax);
             document.getElementById('mLmax').textContent = fmt(r.Lmax);
-            document.getElementById('mPt').style.color = r.Pt >= 0 ? '#27ae60' : '#e74c3c';
-            document.getElementById('mPMt').style.color = r.PMt >= 0 ? '#27ae60' : '#e74c3c';
+            document.getElementById('mPt').style.color = r.Pt >= 0 ? '' : '#b0453f';
+            document.getElementById('mPMt').style.color = r.PMt >= 0 ? '' : '#b0453f';
         }
 
         // ------------------------------------------------------------------
-        // Charts — one per NetLogo plot, plus the annual summaries
+        // Charts
         // ------------------------------------------------------------------
+        // Chart palette: three muted colours reused with the same meaning everywhere
+        const C = { cost: '#b5772b', env: '#4f7d5a', social: '#5b6c8f', demand: '#5b6c8f', production: '#8f867b', price: '#b5772b', grid: '#ece7df', text: '#4a443d' };
+        Chart.defaults.font.family = "'Segoe UI', system-ui, -apple-system, Helvetica, Arial, sans-serif";
+        Chart.defaults.font.size = 12;
+        Chart.defaults.color = C.text;
+        Chart.defaults.borderColor = C.grid;
+
+        const axisTitle = (text) => ({ display: !!text, text, font: { size: 12, weight: '600' }, color: C.text });
         const lineOpts = (leftTitle, rightTitle, leftRange) => ({
             responsive: true, maintainAspectRatio: false, animation: false,
             interaction: { mode: 'index', intersect: false },
-            plugins: { legend: { position: 'bottom', labels: { font: { size: 9 }, boxWidth: 12 } } },
+            plugins: { legend: { position: 'bottom', labels: { boxWidth: 14, boxHeight: 3, padding: 12, font: { size: 12 } } } },
             scales: {
-                x: { ticks: { font: { size: 9 }, maxTicksLimit: 12 } },
-                y: { title: { display: !!leftTitle, text: leftTitle, font: { size: 9 } }, ...(leftRange || {}) },
-                y1: { position: 'right', grid: { drawOnChartArea: false }, title: { display: !!rightTitle, text: rightTitle, font: { size: 9 } } }
+                x: { ticks: { maxTicksLimit: 12, maxRotation: 0, autoSkip: true, font: { size: 11 } }, grid: { display: false } },
+                y: { title: axisTitle(leftTitle), ticks: { font: { size: 12 } }, ...(leftRange || {}) },
+                y1: { position: 'right', grid: { drawOnChartArea: false }, title: axisTitle(rightTitle), ticks: { font: { size: 12 } } }
             }
         });
-        const ds = (label, color, axis = 'y', dash) => ({ label, data: [], borderColor: color, backgroundColor: color, tension: 0.25, pointRadius: 2, borderWidth: 2, yAxisID: axis, borderDash: dash });
+        const ds = (label, color, axis = 'y', dash) => ({ label, data: [], borderColor: color, backgroundColor: color, tension: 0.25, pointRadius: 2.5, borderWidth: 2, yAxisID: axis, borderDash: dash });
 
         function initCharts() {
-            // Plot: "Demand Production and Price"
+            // Demand, production and price
             charts.demand = new Chart(document.getElementById('demandChart'), {
                 type: 'line',
-                data: { labels: [], datasets: [ ds('demand', '#3498db'), ds('production', '#e74c3c'), ds('price', '#f39c12', 'y1') ] },
+                data: { labels: [], datasets: [ ds('Demand', C.demand), ds('Production', C.production), ds('Price', C.price, 'y1') ] },
                 options: lineOpts('units', 'price (£)')
             });
 
-            // Firm-level FES-t / FSS-t (the inputs of the annual sustainability outputs)
+            // Firm-level environmental / social sustainability (weighted 50% product, 25% supplier, 25% logistics)
             charts.sustain = new Chart(document.getElementById('sustainChart'), {
                 type: 'line',
-                data: { labels: [], datasets: [ ds('FES-t  environmental', '#27ae60'), ds('FSS-t  social', '#9b59b6') ] },
-                options: { ...lineOpts('score'), scales: { x: { ticks: { font: { size: 9 }, maxTicksLimit: 12 } }, y: { min: 50, max: 100 } } }
+                data: { labels: [], datasets: [ ds('Environmental sustainability', C.env), ds('Social sustainability', C.social) ] },
+                options: { ...lineOpts('score'), scales: { x: lineOpts().scales.x, y: { title: axisTitle('score'), min: 50, max: 100 } } }
             });
 
-            // Plot: "Supplier's performance"
+            // Supplier's performance
             charts.supplier = new Chart(document.getElementById('supplierChart'), {
                 type: 'line',
                 data: { labels: [], datasets: [
-                    ds("Supplier's cost", '#e67e22', 'y1'),
-                    ds("Supplier's environmental sustainability", '#27ae60'),
-                    ds("Supplier's social sustainability", '#9b59b6') ] },
+                    ds("Cost", C.cost, 'y1'),
+                    ds("Environmental sustainability", C.env),
+                    ds("Social sustainability", C.social) ] },
                 options: lineOpts('sustainability', 'cost (£)', { min: 50, max: 100 })
             });
 
-            // Plot: "The firm's performance"
+            // The firm's performance
             charts.firm = new Chart(document.getElementById('firmChart'), {
                 type: 'line',
                 data: { labels: [], datasets: [
-                    ds("Firm's profit margin (%)", '#e67e22', 'y1'),
-                    ds("Firm's environmental sustainability", '#27ae60'),
-                    ds("Firm's social sustainability", '#9b59b6') ] },
+                    ds("Profit margin (%)", C.cost, 'y1'),
+                    ds("Environmental sustainability", C.env),
+                    ds("Social sustainability", C.social) ] },
                 options: lineOpts('sustainability', 'profit margin (%)', { min: 50, max: 100 })
             });
 
-            // Plot: "Logistics service provider's performance"
+            // Logistics provider's performance
             charts.logistics = new Chart(document.getElementById('logisticsChart'), {
                 type: 'line',
                 data: { labels: [], datasets: [
-                    ds("Logistics service provider's cost", '#e67e22', 'y1'),
-                    ds("Logistics service provider's environmental sustainability", '#27ae60'),
-                    ds("Logistics service provider's social sustainability", '#9b59b6') ] },
+                    ds("Cost", C.cost, 'y1'),
+                    ds("Environmental sustainability", C.env),
+                    ds("Social sustainability", C.social) ] },
                 options: lineOpts('sustainability', 'cost (£)', { min: 50, max: 100 })
             });
 
             // Annual profit margin per year
             charts.profit = new Chart(document.getElementById('profitChart'), {
                 type: 'bar',
-                data: { labels: [], datasets: [{ label: 'Annual profit margin (%)', data: [], backgroundColor: [], borderWidth: 2 }] },
-                options: { responsive: true, maintainAspectRatio: false, animation: false, plugins: { legend: { display: false } }, scales: { y: { title: { display: true, text: '%', font: { size: 9 } } } } }
+                data: { labels: [], datasets: [{ label: 'Annual profit margin (%)', data: [], backgroundColor: [], borderWidth: 0, borderRadius: 4, maxBarThickness: 90 }] },
+                options: { responsive: true, maintainAspectRatio: false, animation: false, plugins: { legend: { display: false } },
+                    scales: { x: { grid: { display: false } }, y: { title: axisTitle('profit margin (%)') } } }
             });
 
-            // NetLogo total-pcost / total-supplier-cost / total-logistics-cost, monthly, stacked
+            // Combined cost components per month, stacked
             charts.cost = new Chart(document.getElementById('costChart'), {
                 type: 'bar',
                 data: { labels: [], datasets: [
-                    { label: 'Total product cost', data: [], backgroundColor: '#e74c3c' },
-                    { label: 'Total supplier cost', data: [], backgroundColor: '#9b59b6' },
-                    { label: 'Total logistics cost', data: [], backgroundColor: '#f39c12' } ] },
+                    { label: 'Product', data: [], backgroundColor: '#c9a877' },
+                    { label: 'Supplier', data: [], backgroundColor: '#8a5a2b' },
+                    { label: 'Logistics', data: [], backgroundColor: '#9aa6bd' } ] },
                 options: { responsive: true, maintainAspectRatio: false, animation: false,
-                    plugins: { legend: { position: 'bottom', labels: { font: { size: 9 }, boxWidth: 12 } }, tooltip: { mode: 'index' } },
-                    scales: { x: { stacked: true, ticks: { font: { size: 9 }, maxTicksLimit: 12 } }, y: { stacked: true } } }
+                    plugins: { legend: { position: 'bottom', labels: { boxWidth: 14, padding: 12, font: { size: 12 } } }, tooltip: { mode: 'index' } },
+                    scales: { x: { stacked: true, ticks: { maxTicksLimit: 12, maxRotation: 0, font: { size: 11 } }, grid: { display: false } }, y: { stacked: true, title: axisTitle('cost (£)') } } }
             });
         }
 
@@ -1152,7 +836,7 @@ observer&gt; go</pre>
 
             charts.profit.data.labels = yearlyResults.map((_, i) => `Year ${i + 1}`);
             charts.profit.data.datasets[0].data = yearlyResults.map(r => r.profitMargin);
-            charts.profit.data.datasets[0].backgroundColor = yearlyResults.map(r => r.profitMargin > 0 ? 'rgba(39,174,96,0.7)' : 'rgba(231,76,60,0.7)');
+            charts.profit.data.datasets[0].backgroundColor = yearlyResults.map(r => r.profitMargin > 0 ? '#8a5a2b' : '#b0453f');
             charts.profit.update('none');
         }
 
@@ -1170,13 +854,13 @@ observer&gt; go</pre>
             if (yearlyResults.length === 0) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#999;">No data yet</td></tr>'; return; }
             tbody.innerHTML = yearlyResults.map((r, i) => {
                 const changed = i > 0 && (r.product !== yearlyResults[i-1].product || r.supplier !== yearlyResults[i-1].supplier || r.logistics !== yearlyResults[i-1].logistics);
-                return `<tr><td>Year ${i+1}${changed ? '<span class="change-badge"></span>' : ''}</td><td>${products[r.product].name}</td><td>${suppliers[r.supplier].name}</td><td>${logistics[r.logistics].name}</td><td style="color:${r.profitMargin > 0 ? '#27ae60' : '#e74c3c'}">${r.profitMargin.toFixed(1)}%</td><td>${r.enviro.toFixed(1)} / ${r.social.toFixed(1)}</td></tr>`;
+                return `<tr><td>Year ${i+1}${changed ? '<span class="change-badge"></span>' : ''}</td><td>${products[r.product].name}</td><td>${suppliers[r.supplier].name}</td><td>${logistics[r.logistics].name}</td><td style="color:${r.profitMargin > 0 ? '#4f7d5a' : '#b0453f'}">${r.profitMargin.toFixed(1)}%</td><td>${r.enviro.toFixed(1)} / ${r.social.toFixed(1)}</td></tr>`;
             }).join('');
         }
 
         function updateCumulativeResults() {
             if (cum.n === 0) return;
-            // Same as NetLogo's running totals divided by number of months simulated so far
+            // Running totals divided by number of months simulated so far
             document.getElementById('cumProfit').textContent = `${(cum.PMT * 100 / cum.n).toFixed(1)}%`;
             document.getElementById('cumEnviro').textContent = (cum.FES / cum.n).toFixed(1);
             document.getElementById('cumSocial').textContent = (cum.FSS / cum.n).toFixed(1);
@@ -1191,7 +875,7 @@ observer&gt; go</pre>
         }
 
         // ------------------------------------------------------------------
-        // go: repeat 12 [ calculate-total-cost ]
+        // Run one year (12 months)
         // ------------------------------------------------------------------
         async function runYear() {
             if (isRunning || currentYear > maxYears) return;
@@ -1206,21 +890,21 @@ observer&gt; go</pre>
             const suppKey = document.getElementById('supplierChoice').value;
             const logKey  = document.getElementById('logisticsChoice').value;
             const production = parseInt(document.getElementById('production').value);
-            const d = parseInt(document.getElementById('disposal').value);     // disposal cost (NetLogo: set d 10)
+            const d = parseInt(document.getElementById('disposal').value);     // disposal cost per unsold unit
             const verbose = document.getElementById('verboseLog').checked;
             const selections = { product: prodKey, supplier: suppKey, logistics: logKey };
 
-            outputPrint(`--- Year ${currentYear}: ${products[prodKey].name} | ${suppliers[suppKey].name} | ${logistics[logKey].name} | production ${production} | d ${d} ---`);
+            outputPrint(`===== Year ${currentYear}: ${products[prodKey].name} | ${suppliers[suppKey].name} | ${logistics[logKey].name} | production ${production} | disposal £${d} =====`);
 
             // Per-year accumulators
             let y = { PMT: 0, FES: 0, FSS: 0, priceL: 0, revenue: 0, profit: 0 };
 
             for (let m = 0; m < 12; m++) {
                 const label = `Y${currentYear} ${months[m]}`;
-                if (verbose) outputPrint(`[month ${counters}]`);
+                if (verbose) outputPrint(`Month ${m + 1}  (${label})`);
                 const r = simulateMonth(prodKey, suppKey, logKey, production, d, verbose);
 
-                // plotxy counters ...
+                // append this month to every chart series
                 series.labels.push(label);
                 series.demand.push(r.demand);
                 series.production.push(production);
@@ -1239,7 +923,7 @@ observer&gt; go</pre>
 
                 y.PMT += r.PMt; y.FES += r.FES; y.FSS += r.FSS; y.priceL += r.price; y.revenue += r.Rt; y.profit += r.Pt;
                 cum.PMT += r.PMt; cum.FES += r.FES; cum.FSS += r.FSS; cum.priceL += r.price; cum.n += 1;
-                counters += 1;
+                monthCounter += 1;
 
                 updateBalance(production, r.demand);
                 updateMonitors(r, label);
@@ -1248,16 +932,16 @@ observer&gt; go</pre>
                 await new Promise(res => setTimeout(res, 70));
             }
 
-            // Annual outputs (NetLogo output-print block, averaged over the 12 months of this year)
+            // Annual outputs, averaged over the 12 months of this year
             const result = { year: currentYear, ...selections,
                 profitMargin: y.PMT * 100 / 12, enviro: y.FES / 12, social: y.FSS / 12, price: y.priceL / 12,
                 revenue: y.revenue, profit: y.profit };
             yearlyResults.push(result);
 
-            outputPrint(`Annual profit margin (in %) : ${fmt(result.profitMargin)}`);
-            outputPrint(`Annual environmental sustainability : ${fmt(result.enviro)}`);
-            outputPrint(`Annual social sustainability : ${fmt(result.social)}`);
-            outputPrint(`Average price : £${fmt(result.price)}`);
+            outputPrint(`Year ${currentYear} annual profit margin: ${fmt(result.profitMargin)}%`);
+            outputPrint(`Year ${currentYear} environmental sustainability: ${fmt(result.enviro)}`);
+            outputPrint(`Year ${currentYear} social sustainability: ${fmt(result.social)}`);
+            outputPrint(`Year ${currentYear} average price: £${fmt(result.price)}`);
             flushLog();
 
             const prev = yearlyResults.length > 1 ? yearlyResults[yearlyResults.length - 2] : null;
@@ -1298,10 +982,10 @@ observer&gt; go</pre>
         }
 
         function resetSimulation() {
-            currentYear = 1; yearlyResults = []; series = emptySeries(); counters = 1;
+            currentYear = 1; yearlyResults = []; series = emptySeries(); monthCounter = 1;
             cum = { PMT: 0, FES: 0, FSS: 0, priceL: 0, n: 0 };
             previousSelections = { product: null, supplier: null, logistics: null };
-            logLines.length = 0; logLines.push('observer> setup', 'observer> go'); flushLog();
+            logLines.length = 0; flushLog();
             document.getElementById('currentYear').textContent = '1';
             document.getElementById('runYearNum').textContent = '1';
             document.getElementById('statusDisplay').textContent = 'Ready to start Year 1';
@@ -1331,12 +1015,10 @@ observer&gt; go</pre>
         });
     </script>
 
-    <footer style="text-align: center; padding: 20px; margin-top: 30px; color: rgba(255,255,255,0.8); font-size: 0.85em;">
-        <p style="background: rgba(255,193,7,0.2); border: 1px solid rgba(255,193,7,0.4); border-radius: 8px; padding: 12px 15px; margin-bottom: 15px; font-size: 0.9em; color: rgba(255,255,255,0.9); max-width: 800px; margin-left: auto; margin-right: auto;">
-            ⚠️ <strong>Note:</strong> This simulation is for educational demonstration purposes only. Results may differ significantly from real-world outcomes. It illustrates theoretical concepts based on the parameters you configure.
-        </p>
+    <footer>
+        <p class="note"><strong>Note:</strong> This simulation is for educational demonstration purposes only. Results may differ significantly from real-world outcomes. It illustrates theoretical concepts based on the parameters you configure.</p>
         <p>© 2025 Dr Mohit Kumar Singh. All rights reserved.</p>
-        <p style="margin-top: 5px; font-size: 0.8em; opacity: 0.7;">Passenger and Freight Transport | For educational purposes only.</p>
+        <p style="margin-top: 4px; font-size: 0.9em;">Passenger and Freight Transport | For educational purposes only.</p>
     </footer>
 </body>
 </html>
