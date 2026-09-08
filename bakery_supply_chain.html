@@ -13,7 +13,7 @@
 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bakery Supply Chain Sustainability Simulator - Multi-Year</title>
+    <title>Bakery Supply Chain Sustainability Simulator - </title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
@@ -137,7 +137,7 @@
         .status-display.complete { border-color: var(--green); color: var(--green); }
 
         /* ---------- status row ---------- */
-        .status-row { display: grid; grid-template-columns: 300px 1fr 260px; gap: 12px; margin-bottom: 12px; align-items: stretch; }
+        .status-row { display: grid; grid-template-columns: 300px 1fr 300px; gap: 12px; margin-bottom: 12px; align-items: stretch; }
 
         .balance-container { padding: 10px 12px 8px; text-align: center; display: flex; flex-direction: column; justify-content: space-between; }
         .balance-visual { position: relative; height: 98px; margin: 0 0 6px; }
@@ -170,7 +170,11 @@
         .trend.neutral { color: var(--muted); }
 
         .years-card { padding: 10px 12px; }
-        .year-summary { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+        .year-summary { display: flex; flex-wrap: wrap; gap: 6px; max-height: 84px; overflow-y: auto; }
+        .year-summary:empty::after { content: 'Completed years will appear here.'; color: var(--muted); font-size: 0.8em; }
+        .year-box { min-width: 44px; flex: 0 0 auto; }
+        .chart-window { display: flex; align-items: center; gap: 8px; margin-top: 8px; font-size: 0.82em; color: var(--muted); }
+        .chart-window select { width: auto; padding: 4px 6px; font-size: 0.95em; }
         .year-box { background: var(--bg); border-radius: 8px; padding: 6px 2px; text-align: center; border: 1px solid transparent; }
         .year-box.active { border-color: var(--accent); background: var(--accent-light); }
         .year-box.completed { background: var(--accent-light); }
@@ -257,7 +261,7 @@
             <div class="year-indicator">
                 <div class="year-label">Planning</div>
                 <div class="year-number">Year <span id="currentYear">1</span></div>
-                <div class="year-label">of <span id="totalYears">5</span></div>
+                <div class="year-label" id="yearsDone">no years run yet</div>
             </div>
 
             <div class="card">
@@ -321,7 +325,8 @@
                 <h2>Run</h2>
                 <div class="btn-group">
                     <button class="btn btn-primary" id="runYearBtn" onclick="runYear()">Run Year <span id="runYearNum">1</span></button>
-                    <button class="btn btn-secondary" id="runAllBtn" onclick="runAllYears()">Run All 5</button>
+                    <button class="btn btn-secondary" id="runAllBtn" onclick="runAllYears()">Run 5 Years</button>
+                    <button class="btn btn-secondary" id="stopBtn" onclick="stopRun()" disabled>Stop</button>
                     <button class="btn btn-reset" onclick="resetSimulation()">Reset</button>
                 </div>
                 <div class="status-display ready" id="statusDisplay">Ready to start Year 1</div>
@@ -374,13 +379,16 @@
 
             <div class="card years-card">
                 <h2>Years</h2>
-                <div class="year-summary" id="yearSummary">
-                    <div class="year-box active" data-year="1"><div class="year-num">Y1</div><div class="year-profit">--</div></div>
-                    <div class="year-box" data-year="2"><div class="year-num">Y2</div><div class="year-profit">--</div></div>
-                    <div class="year-box" data-year="3"><div class="year-num">Y3</div><div class="year-profit">--</div></div>
-                    <div class="year-box" data-year="4"><div class="year-num">Y4</div><div class="year-profit">--</div></div>
-                    <div class="year-box" data-year="5"><div class="year-num">Y5</div><div class="year-profit">--</div></div>
-                </div>
+                <div class="year-summary" id="yearSummary"></div>
+                <label class="chart-window"><span>Charts show</span>
+                    <select id="chartWindow">
+                        <option value="0">all years</option>
+                        <option value="1">last year</option>
+                        <option value="3">last 3 years</option>
+                        <option value="5" selected>last 5 years</option>
+                        <option value="10">last 10 years</option>
+                    </select>
+                </label>
             </div>
         </div>
 
@@ -513,7 +521,7 @@
         const MAX_PRICE = 110;                          // set price 110
 
         let currentYear = 1;
-        const maxYears = 5;
+        let stopRequested = false;
         let isRunning = false;
         let previousSelections = { product: null, supplier: null, logistics: null };
         let yearlyResults = [];
@@ -832,9 +840,12 @@
 
         function updateCharts() {
             const s = series;
+            const win = parseInt(document.getElementById('chartWindow').value);   // years shown, 0 = all
+            const months = win > 0 ? win * 12 : Infinity;
+            const tail = (a) => (a.length > months ? a.slice(-months) : a);
             const set = (chart, arrays) => {
-                chart.data.labels = s.labels;
-                arrays.forEach((a, i) => chart.data.datasets[i].data = a);
+                chart.data.labels = tail(s.labels);
+                arrays.forEach((a, i) => chart.data.datasets[i].data = tail(a));
                 chart.update('none');
             };
             set(charts.demand,    [s.demand, s.production, s.price]);
@@ -844,19 +855,20 @@
             set(charts.logistics, [s.logCost, s.LS1, s.LS2]);
             set(charts.cost,      [s.totalPcost, s.totalScost, s.totalLcost]);
 
-            charts.profit.data.labels = yearlyResults.map((_, i) => `Year ${i + 1}`);
-            charts.profit.data.datasets[0].data = yearlyResults.map(r => r.profitMargin);
-            charts.profit.data.datasets[0].backgroundColor = yearlyResults.map(r => r.profitMargin > 0 ? '#8a5a2b' : '#b0453f');
+            const yrs = yearlyResults.map((r, i) => ({ ...r, idx: i + 1 }));
+            const shown = win > 0 && yrs.length > win ? yrs.slice(-win) : yrs;
+            charts.profit.data.labels = shown.map(r => `Year ${r.idx}`);
+            charts.profit.data.datasets[0].data = shown.map(r => r.profitMargin);
+            charts.profit.data.datasets[0].backgroundColor = shown.map(r => r.profitMargin > 0 ? '#8a5a2b' : '#b0453f');
             charts.profit.update('none');
         }
 
         function updateYearSummary() {
-            document.querySelectorAll('.year-box').forEach((box, i) => {
-                box.classList.remove('active', 'completed');
-                if (i + 1 === currentYear) box.classList.add('active');
-                if (yearlyResults[i]) { box.classList.add('completed'); box.querySelector('.year-profit').textContent = `${yearlyResults[i].profitMargin.toFixed(1)}%`; }
-                else { box.querySelector('.year-profit').textContent = '--'; }
-            });
+            const wrap = document.getElementById('yearSummary');
+            wrap.innerHTML = yearlyResults.map((r, i) =>
+                `<div class="year-box completed${i + 1 === yearlyResults.length ? ' active' : ''}" title="${products[r.product].name} | ${suppliers[r.supplier].name} | ${logistics[r.logistics].name}">
+                    <div class="year-num">Y${i + 1}</div><div class="year-profit">${r.profitMargin.toFixed(1)}%</div></div>`).join('');
+            wrap.scrollTop = wrap.scrollHeight;
         }
 
         function updateHistory() {
@@ -888,7 +900,7 @@
         // Run one year (12 months)
         // ------------------------------------------------------------------
         async function runYear() {
-            if (isRunning || currentYear > maxYears) return;
+            if (isRunning) return;
             isRunning = true;
 
             document.getElementById('statusDisplay').textContent = `Running Year ${currentYear}...`;
@@ -973,23 +985,27 @@
             document.getElementById('currentYear').textContent = currentYear;
             document.getElementById('runYearNum').textContent = currentYear;
 
-            if (currentYear > maxYears) {
-                document.getElementById('statusDisplay').textContent = 'All 5 years complete!';
-                document.getElementById('statusDisplay').className = 'status-display complete';
-                document.getElementById('runYearBtn').disabled = true;
-                document.getElementById('runAllBtn').disabled = true;
-            } else {
-                document.getElementById('statusDisplay').textContent = `Year ${currentYear - 1} complete. Change selections for Year ${currentYear} or run again!`;
-                document.getElementById('statusDisplay').className = 'status-display ready';
-                document.getElementById('runYearBtn').disabled = false;
-                document.getElementById('runAllBtn').disabled = false;
-            }
+            document.getElementById('yearsDone').textContent = `${yearlyResults.length} year${yearlyResults.length === 1 ? '' : 's'} run`;
+            document.getElementById('statusDisplay').textContent = `Year ${currentYear - 1} complete. Change selections for Year ${currentYear} or keep going.`;
+            document.getElementById('statusDisplay').className = 'status-display ready';
+            document.getElementById('runYearBtn').disabled = false;
+            document.getElementById('runAllBtn').disabled = false;
             isRunning = false;
         }
 
+        // Run the next 5 years in one go (Stop ends the batch after the current year)
         async function runAllYears() {
-            while (currentYear <= maxYears) { await runYear(); if (currentYear <= maxYears) await new Promise(r => setTimeout(r, 300)); }
+            if (isRunning) return;
+            stopRequested = false;
+            document.getElementById('stopBtn').disabled = false;
+            for (let i = 0; i < 5 && !stopRequested; i++) {
+                await runYear();
+                if (i < 4 && !stopRequested) await new Promise(r => setTimeout(r, 300));
+            }
+            document.getElementById('stopBtn').disabled = true;
+            stopRequested = false;
         }
+        function stopRun() { stopRequested = true; document.getElementById('stopBtn').disabled = true; }
 
         function resetSimulation() {
             currentYear = 1; yearlyResults = []; series = emptySeries(); monthCounter = 1;
@@ -999,6 +1015,8 @@
             document.getElementById('currentYear').textContent = '1';
             document.getElementById('runYearNum').textContent = '1';
             document.getElementById('statusDisplay').textContent = 'Ready to start Year 1';
+            document.getElementById('yearsDone').textContent = 'no years run yet';
+            document.getElementById('stopBtn').disabled = true; stopRequested = false;
             document.getElementById('statusDisplay').className = 'status-display ready';
             document.getElementById('runYearBtn').disabled = false;
             document.getElementById('runAllBtn').disabled = false;
@@ -1020,6 +1038,7 @@
             document.getElementById('logisticsChoice').addEventListener('change', updateLogisticsDetails);
             document.getElementById('production').addEventListener('input', updateSliderDisplays);
             document.getElementById('disposal').addEventListener('input', updateSliderDisplays);
+            document.getElementById('chartWindow').addEventListener('change', updateCharts);
             updateProductDetails(); updateSupplierDetails(); updateLogisticsDetails(); updateSliderDisplays();
             updateBalance(parseInt(document.getElementById('production').value), DEMAND_MEAN);
         });
