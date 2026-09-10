@@ -315,7 +315,7 @@
                     <label><span>Quantity</span><span id="productionValue">100 units</span></label>
                     <input type="range" id="production" min="50" max="200" value="100" step="5">
                 </div>
-                <div class="slider-group">
+                <div class="slider-group" id="disposalGroup">
                     <label><span>Disposal cost / unit</span><span id="disposalValue">£10</span></label>
                     <input type="range" id="disposal" min="5" max="20" value="10" step="1">
                 </div>
@@ -516,6 +516,12 @@
             'daily-haul':    { name: 'Daily-Haul Distribution', price: 9.5, priceStdev: 3,   sustain: 92, sustainStdev: 7 },
             'urban-crate':   { name: 'Urban-Crate Express',     price: 9,   priceStdev: 2.5, sustain: 90, sustainStdev: 5 }
         };
+
+        // ---- Disposal cost setting ----------------------------------------
+        // SHOW_DISPOSAL_SLIDER = true  -> the slider is shown and its value is used
+        // SHOW_DISPOSAL_SLIDER = false -> the slider is hidden and DISPOSAL_COST is used for every year
+        const SHOW_DISPOSAL_SLIDER = false;
+        const DISPOSAL_COST = 10;                        // £ per unsold unit when the slider is off
 
         const DEMAND_MEAN = 100, DEMAND_STDEV = 10;   // set demand random-normal 100 10
         const MAX_PRICE = 110;                          // set price 110
@@ -913,7 +919,7 @@
             const suppKey = document.getElementById('supplierChoice').value;
             const logKey  = document.getElementById('logisticsChoice').value;
             const production = parseInt(document.getElementById('production').value);
-            const d = parseInt(document.getElementById('disposal').value);     // disposal cost per unsold unit
+            const d = SHOW_DISPOSAL_SLIDER ? parseInt(document.getElementById('disposal').value) : DISPOSAL_COST;   // disposal cost per unsold unit
             const verbose = document.getElementById('verboseLog').checked;
             const selections = { product: prodKey, supplier: suppKey, logistics: logKey };
 
@@ -1039,6 +1045,7 @@
             document.getElementById('logisticsChoice').addEventListener('change', updateLogisticsDetails);
             document.getElementById('production').addEventListener('input', updateSliderDisplays);
             document.getElementById('disposal').addEventListener('input', updateSliderDisplays);
+            if (!SHOW_DISPOSAL_SLIDER) document.getElementById('disposalGroup').style.display = 'none';
             document.getElementById('chartWindow').addEventListener('change', updateCharts);
             updateProductDetails(); updateSupplierDetails(); updateLogisticsDetails(); updateSliderDisplays();
             updateBalance(parseInt(document.getElementById('production').value), DEMAND_MEAN);
